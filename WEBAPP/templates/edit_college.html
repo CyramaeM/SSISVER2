@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Edit College{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>Edit College</h1>
+    <form id="editCollegeForm" action="{{ url_for('controller.edit_college', collegecode=college.collegecode) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <!-- College Code -->
+        <div class="form-group">
+            <label for="college_code">College Code:</label>
+            <input type="text" name="college_code" id="college_code" value="{{ college.collegecode }}" class="form-control" required>
+        </div>
+        
+        <!-- College Name -->
+        <div class="form-group">
+            <label for="college_name">College Name:</label>
+            <input type="text" name="college_name" id="college_name" value="{{ college.collegename }}" class="form-control" required>
+        </div>
+        
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+</div>
+{% endblock %}

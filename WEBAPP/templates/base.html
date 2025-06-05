@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}My Flask App{% endblock %}</title>
+    <link rel="stylesheet" href='/static/styles.css'>
+    <link rel="stylesheet" href='/static/form.css'>
+    <link rel="stylesheet" href='/static/base.css'>
+    <link rel="stylesheet" href='/static/add.css'>
+    <link rel="stylesheet" href='/static/search.css'>
+</head>
+<body>
+    <nav class="navbar">
+        <ul>
+            {% if 'user_id' in session %}
+                <li><a href="{{ url_for('controller.logout') }}">Log Out</a></li>
+                <li><a href="{{ url_for('controller.home') }}">Student</a></li>
+                <li><a href="{{ url_for('controller.collegehome') }}">College</a></li>
+                <li><a href="{{ url_for('controller.coursehome') }}">Course</a></li>
+                <li>
+                    <form action="{{ url_for('controller.search') }}" method="GET" class="search-form">
+                        <input type="text" name="query" placeholder="Search..." required>
+                        <button type="submit">Search</button>
+                    </form>
+                </li>
+            {% else %}
+                <li><a href="{{ url_for('controller.signup') }}">Sign Up</a></li>
+                <li><a href="{{ url_for('controller.login') }}">Log In</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    
+    <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+    
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

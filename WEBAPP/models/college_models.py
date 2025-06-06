@@ -6,12 +6,12 @@ from flask import request, session, redirect, url_for, flash
 
 
 class college:
+
     @staticmethod
     def collegehome():
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cur.execute("SELECT collegecode, collegename FROM college")
         colleges = cur.fetchall()
-        cur.commit()
         cur.close()
         return colleges
     

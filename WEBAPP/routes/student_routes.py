@@ -11,7 +11,8 @@ student_bp = Blueprint('students', __name__, template_folder='templates')
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
-@student_bp.route('/student/home')
+@login_required
+@student_bp.route('/home')
 def home():
     page = request.args.get('page', 1, type=int)
     per_page = 10
@@ -21,28 +22,13 @@ def home():
 
     return render_template('student.html', page=page, total_pages=total_pages, students=students)
 
-@login_required
-@student_bp.route('/student/addstudent', methods=['GET','POST'])
+@student_bp.route('/addstudent', methods=['GET', 'POST'])
 def add_student():
-    print("Request Method:", request.method)  # Debugging request type
-    print("Received Form Data:", request.form)  # Check what Flask actually gets
+    if request.method == 'GET':
+        return render_template('add_student.html', courses=student.get_courses())  # ✅ Call model function
 
-    if request.method != 'POST':
-        print("Error: Form not submitted via POST")
-        flash("Please submit the form correctly.", "error")
-        return redirect(url_for('students.home'))
-
-
+    # Retrieve form data
     stud_id = request.form.get('stud_id', '').strip()
-    print("Received Student ID:", stud_id)  # Debugging
-
-
-    if not stud_id:  # Check if empty
-        print("Error: No Student ID received")  # Debugging step
-        flash("Student ID is required!", "error")
-        return redirect(url_for('students.home'))
-
-    # Proceed with other fields
     fname = request.form.get('fname', '').strip()
     lname = request.form.get('lname', '').strip()
     course = request.form.get('course', '').strip()
@@ -50,18 +36,36 @@ def add_student():
     gender = request.form.get('gender', '').strip()
     profile_photo = request.files.get('profile_photo')
 
+    # Validate required fields
+    if not stud_id or not fname or not lname or not course:
+        flash("All fields are required!", "error")
+        return redirect(url_for('student_bp.add_student'))
+
+    # Handle profile photo
+    photo_url = profile_photo.filename if profile_photo else None  
+    photo_public_id = "some_unique_id"
+
     try:
-        student.add_student(stud_id, fname, lname, course, yearlevel, gender, profile_photo)
-        flash("Data Inserted Successfully", "success")
+        student.add_student(stud_id, fname, lname, course, yearlevel, gender, photo_url, photo_public_id)  # ✅ Only call the model
+        flash("Student added successfully!", "success")
     except Exception as e:
-        print("Database Error:", e)  # Debugging database issues
-        flash("Student ID already exists. Please try another.", 'error')
+        print("Database Error:", e)
+        flash("An error occurred while adding the student. Try again.", "error")
 
     return redirect(url_for('students.home'))
 
-@student_bp.route('/student/edit_student/<string:student_id>', methods=['GET', 'POST'])
-def edit_student(student_id):  # Add student_id as parameter
-    student_id = request.form.get('student_id', '').strip()
+
+@student_bp.route('/edit_student/<string:student_id>', methods=['GET', 'POST'])
+def edit_student(student_id):
+    if request.method == 'GET':  # Show the form
+        student_data = student.get_student_by_id(student_id)  # ✅ Fetch current student data
+        if not student_data:
+            flash("Student not found!", "error")
+            return redirect(url_for('students.home'))
+
+        return render_template('edit_student.html', student=student_data)  # ✅ Display form
+
+    # Handle form submission on POST request
     fname = request.form.get('fname', '')
     lname = request.form.get('lname', '')
     course = request.form.get('course', '')
@@ -69,7 +73,13 @@ def edit_student(student_id):  # Add student_id as parameter
     gender = request.form.get('gender', '')
 
     student.edit_student(student_id, fname, lname, course, yearlevel, gender)
-    return redirect(url_for('students.home'))
+
+    flash("Student updated successfully!", "success")
+
+    # ✅ Fetch updated data to ensure changes are displayed
+    updated_student_data = student.get_student_by_id(student_id)
+
+    return render_template('home.html', student=updated_student_data)  # ✅ Reload form with new data
 
 
 

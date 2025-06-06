@@ -1,5 +1,6 @@
 from flask import render_template, url_for, redirect, request, flash, Blueprint,session
 import re
+from webapp.models import college_models
 from webapp.models.college_models import college
 
 
@@ -7,14 +8,18 @@ college_bp = Blueprint('college',__name__)
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
-@college_bp.route('/college/collegehome',methods=['GET','POST'])
+@college_bp.route('/collegehome',methods=['GET','POST'])
 def college():
     if 'user_id' not in session:
         flash("You must log in first!", "danger")
-        return redirect(url_for('controller.login'))
-    return render_template('college.html')
+        return redirect(url_for('auth.login'))  # ✅ Fix incorrect controller reference
 
-@college_bp.route('/college/addcollege',methods=['GET','POST'])
+    # ✅ Correct model reference
+    colleges = college.collegehome()
+
+    return render_template('college.html', colleges=colleges)
+
+@college_bp.route('/addcollege',methods=['GET','POST'])
 def add_college():
     if 'user_id' not in session:
         flash("You must log in first!", "danger")
@@ -30,7 +35,7 @@ def add_college():
     
     return render_template('add_college.html')
 
-@college_bp.route('/college/editcollege',methods=['GET','POST'])
+@college_bp.route('/editcollege',methods=['GET','POST'])
 def edit_college():
     if request.method == 'POST':
             # Get form data for college
@@ -47,7 +52,7 @@ def edit_college():
         return render_template('edit_college.html')
     
 
-@college_bp.route('/college/deletecollege',methods=['GET','POST'])
+@college_bp.route('/deletecollege',methods=['GET','POST'])
 def delete_college(college_code):
     if 'user_id' not in session:
         flash("You must log in first!", "danger")

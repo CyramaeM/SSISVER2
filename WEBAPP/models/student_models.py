@@ -30,34 +30,46 @@ class student:
             return 1, []  # Return safe defaults
 
     @staticmethod
-    def add_student(stud_id,fname,lname,course,yearlevel,gender,photo_url,photo_public_id):
-        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)  
+    def get_courses():
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cur.execute("SELECT coursecode FROM course")  
         courses = [row['coursecode'] for row in cur.fetchall()]
         cur.close()
+        return courses
 
+    @staticmethod
+    def add_student(stud_id, fname, lname, course, yearlevel, gender, photo_url, photo_public_id):
         try:
             with mysql.connection.cursor() as cur:
-                cur.execute("INSERT INTO students (id_number, fname, lname, course, yearlevel, gender, profile,profile_id) VALUES (%s, %s, %s, %s, %s, %s, %s,%s)", 
-                            (stud_id, fname, lname, course, yearlevel, gender, photo_url,photo_public_id))
+                cur.execute("""
+                    INSERT INTO students (id_number, fname, lname, course, yearlevel, gender, profile, profile_id) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, (stud_id, fname, lname, course, yearlevel, gender, photo_url, photo_public_id))
+                
                 mysql.connection.commit()
-                flash("Student added successfully!", "success")
         except Exception as e:
             print("Database Error:", e)
-            flash("An error occurred. Please try again.", "danger")
-        return courses
+            flash("An error occurred while saving student data.", "danger")
+
+    @staticmethod
+    def get_student_by_id(student_id):
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cur.execute("SELECT * FROM students WHERE id_number = %s", (student_id,))
+        student_data = cur.fetchone()
+        cur.close()
+        return student_data
+
     
     @staticmethod
-    def edit_student(id_number,fname,lname,course,yearlevel,gender):
-        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor) 
+    def edit_student(id_number, fname, lname, course, yearlevel, gender):
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cur.execute("""
-                UPDATE students 
-                SET fname=%s, lname=%s, course=%s, yearlevel=%s, gender=%s 
-                WHERE id_number=%s
-            """, (id_number, fname, lname, course, yearlevel, gender))
-            
-        mysql.connection.commit()
-        flash("Student updated successfully!", "success")
+            UPDATE students 
+            SET fname=%s, lname=%s, course=%s, yearlevel=%s, gender=%s 
+            WHERE id_number=%s
+        """, (fname, lname, course, yearlevel, gender, id_number))  # ✅ Fix argument order
+
+        mysql.connection.commit()  # ✅ Commit changes
         cur.close()
 
 

@@ -15,11 +15,11 @@
         <ul>
             {% if 'user_id' in session %}
                 <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
-                <li><a href="{{ url_for('student.home') }}">Student</a></li>
-                <li><a href="{{ url_for('college.collegehome') }}">College</a></li>
-                <li><a href="{{ url_for('course.coursehome') }}">Course</a></li>
+                <li><a href="{{ url_for('students.home') }}">Student</a></li>
+                <li><a href="{{ url_for('college.college') }}">College</a></li>
+                <li><a href="{{ url_for('course.course') }}">Course</a></li>
                 <li>
-                    <form action="{{ url_for('student.search') }}" method="GET" class="search-form">
+                    <form action="{{ url_for('students.home') }}" method="GET" class="search-form">
                         <input type="text" name="query" placeholder="Search..." required>
                         <button type="submit">Search</button>
                     </form>

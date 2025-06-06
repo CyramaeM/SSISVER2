@@ -34,7 +34,6 @@ class auth:
 
             if not user:
                 flash("Invalid email or password", "danger")
-                return redirect(url_for("controller.login"))
 
             if check_password_hash(hashed_password, password):  
                 session["user_id"] = user_id

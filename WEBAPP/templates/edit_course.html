@@ -5,7 +5,7 @@
 {% block content %}
 <div class="form-container">
     <h1>Edit Course</h1>
-    <form id="editCourseForm" action="{{ url_for('controller.edit_course', coursecode=course.coursecode) }}" method="POST">
+    <form id="editCourseForm" action="{{ url_for('course.edit_course', coursecode=course.coursecode) }}" method="POST">
 
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         

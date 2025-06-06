@@ -1,21 +1,33 @@
 import MySQLdb
-from webapp import mysql
-from flask_mysqldb import MySQL
+from webapp.database import mysql
 from flask import  flash
 import cloudinary
 
 
 class student:
     @staticmethod
-    def home(per_page=10,offset=0):
-        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cur.execute("SELECT * FROM students LIMIT %s OFFSET %s", (per_page, offset))
-        students = cur.fetchall()
-        cur.execute("SELECT COUNT(*) AS total FROM students")
-        total_students = cur.fetchone()['total']
-        total_pages = (total_students + per_page - 1) // per_page
-        cur.close()
-        return total_pages,students
+    def fetch_student(per_page=10, offset=0):
+        try:
+            cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            
+            # Get paginated students
+            cur.execute("SELECT * FROM students LIMIT %s OFFSET %s", (per_page, offset))
+            students = cur.fetchall()
+            
+            # Get total student count
+            cur.execute("SELECT COUNT(*) AS total FROM students")
+            total_students = cur.fetchone()['total']
+            cur.close()  # Close cursor AFTER both queries
+            
+            # Handle zero students case
+            total_pages = max(1, (total_students + per_page - 1) // per_page)  
+            
+            return total_pages, students
+            
+        except Exception as e:
+            print(f"Database Error in home(): {e}")
+            flash("Failed to load student list", "danger")
+            return 1, []  # Return safe defaults
 
     @staticmethod
     def add_student(stud_id,fname,lname,course,yearlevel,gender,photo_url,photo_public_id):
@@ -36,13 +48,13 @@ class student:
         return courses
     
     @staticmethod
-    def edit_student(id_number,fname,lname,course,yearlevel,gender,student_id):
+    def edit_student(id_number,fname,lname,course,yearlevel,gender):
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor) 
         cur.execute("""
                 UPDATE students 
-                SET id_number=%s, fname=%s, lname=%s, course=%s, yearlevel=%s, gender=%s 
+                SET fname=%s, lname=%s, course=%s, yearlevel=%s, gender=%s 
                 WHERE id_number=%s
-            """, (id_number, fname, lname, course, yearlevel, gender, student_id))
+            """, (id_number, fname, lname, course, yearlevel, gender))
             
         mysql.connection.commit()
         flash("Student updated successfully!", "success")

@@ -12,7 +12,7 @@
             <th>Course Code</th>
             <th>Course Name</th>
             <th>College</th>
-            <th><a href="{{ url_for('controller.add_course') }}" class="btn btn-primary">Add Course</a></th>
+            <th><a href="{{ url_for('course.add_course') }}" class="btn btn-primary">Add Course</a></th>
         </tr>
     </thead>
     <tbody>
@@ -22,8 +22,8 @@
             <td>{{ course.coursename }}</td>
             <td>{{ course.collegecode }}</td>
             <td>
-                <a href="{{ url_for('controller.edit_course', coursecode=course.coursecode) }}" class="btn btn-success">Edit</a>
-                <form action="{{ url_for('controller.delete_course', coursecode=course.coursecode) }}" method="POST" style="display:inline-block;" onsubmit="return confirmDelete()">
+                <a href="{{ url_for('course.edit_course', coursecode=course.coursecode) }}" class="btn btn-success">Edit</a>
+                <form action="{{ url_for('course.delete_course', coursecode=course.coursecode) }}" method="POST" style="display:inline-block;" onsubmit="return confirmDelete()">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-danger">Delete</button>
             </td>

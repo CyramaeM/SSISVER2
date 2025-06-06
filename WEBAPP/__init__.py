@@ -1,14 +1,13 @@
-from flask import Flask
-from flask_mysqldb import MySQL
+from flask import Flask, render_template,request
+from webapp.database import mysql
 #from config import DB_USERNAME, DB_PASSWORD, DB_NAME, DB_HOST, SECRET_KEY
+from webapp.models.student_models import student
 from flask_wtf.csrf import CSRFProtect
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
 
-
-mysql = MySQL()
 csrf = CSRFProtect()
 
 def create_app():
@@ -43,7 +42,25 @@ def create_app():
 
     csrf.init_app(app)
 
-    from . import controller
-    app.register_blueprint(controller,url_prefix='/')
+    @app.route('/',methods=['GET','POST'])
+    def index():
+        page = request.args.get('page', 1, type=int)
+        per_page = 10
+        offset = (page - 1) * per_page
+        
+        total_pages, students = student.fetch_student(per_page, offset)
+        
+        return render_template('student.html',  students=students, page=page, total_pages=total_pages)
+
+    from.routes.auth_routes import auth_bp
+    from .routes.college_routes import college_bp
+    from .routes.course_routes import course_bp
+    from .routes.student_routes import student_bp
+    
+    app.register_blueprint(auth_bp,url_prefix='/auth')
+    app.register_blueprint(college_bp,url_prefix='/college')
+    app.register_blueprint(course_bp,url_prefix='/course')
+    app.register_blueprint(student_bp,url_prefix='/student')
+
 
     return app

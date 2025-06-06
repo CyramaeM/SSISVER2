@@ -1,7 +1,7 @@
 from flask import Blueprint,render_template,request,session,redirect,url_for,flash
 from werkzeug.security import generate_password_hash, check_password_hash
-from .models.student_models import ALLOWED_EXTENSIONS,create_user,verify_user
-from .. import mysql,csrf
+from mysql.connector import Error
+from . import mysql,csrf
 import cloudinary
 import cloudinary.uploader
 

@@ -14,19 +14,19 @@
     <nav class="navbar">
         <ul>
             {% if 'user_id' in session %}
-                <li><a href="{{ url_for('controller.logout') }}">Log Out</a></li>
-                <li><a href="{{ url_for('controller.home') }}">Student</a></li>
-                <li><a href="{{ url_for('controller.collegehome') }}">College</a></li>
-                <li><a href="{{ url_for('controller.coursehome') }}">Course</a></li>
+                <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
+                <li><a href="{{ url_for('student.home') }}">Student</a></li>
+                <li><a href="{{ url_for('college.collegehome') }}">College</a></li>
+                <li><a href="{{ url_for('course.coursehome') }}">Course</a></li>
                 <li>
-                    <form action="{{ url_for('controller.search') }}" method="GET" class="search-form">
+                    <form action="{{ url_for('student.search') }}" method="GET" class="search-form">
                         <input type="text" name="query" placeholder="Search..." required>
                         <button type="submit">Search</button>
                     </form>
                 </li>
             {% else %}
-                <li><a href="{{ url_for('controller.signup') }}">Sign Up</a></li>
-                <li><a href="{{ url_for('controller.login') }}">Log In</a></li>
+                <li><a href="{{ url_for('auth.signup') }}">Sign Up</a></li>
+                <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
             {% endif %}
         </ul>
     </nav>

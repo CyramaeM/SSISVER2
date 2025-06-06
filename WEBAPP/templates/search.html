@@ -42,13 +42,13 @@
 {% if total_pages > 1 %}
 <div class="pagination">
     {% if page > 1 %}
-        <a href="{{ url_for('controller.search', query=query, page=page-1) }}" class="btn">Previous</a>
+        <a href="{{ url_for('student.search', query=query, page=page-1) }}" class="btn">Previous</a>
     {% endif %}
 
     <span>Page {{ page }} of {{ total_pages }}</span>
 
     {% if page < total_pages %}
-        <a href="{{ url_for('controller.search', query=query, page=page+1) }}" class="btn">Next</a>
+        <a href="{{ url_for('student.search', query=query, page=page+1) }}" class="btn">Next</a>
     {% endif %}
 </div>
 {% endif %}

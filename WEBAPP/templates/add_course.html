@@ -6,7 +6,8 @@
 <h2>Course Information</h2>
 <div class="modal-body">
     <div class="form-container">
-        <form id="addCollegeForm" action="{{ url_for('controller.add_course') }}" method="POST" enctype="multipart/form-data">
+        <form id="addCollegeForm" action="{{ url_for('course.add_course') }}" method="POST">
+
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <!-- Course Code -->
             <div class="form-group">

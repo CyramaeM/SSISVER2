@@ -7,7 +7,7 @@
 
 <!-- Add College Modal -->
 <div class="form-container">
-    <form id="addCollegeForm" action="{{ url_for('controller.add_college') }}" method="POST" enctype="multipart/form-data">
+    <form id="addCollegeForm" action="{{ url_for('college.add_college') }}" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <!-- College Code -->
         <div class="form-group">

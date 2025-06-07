@@ -5,8 +5,15 @@ from flask_mysqldb import MySQL
 from flask import request, session, redirect, url_for, flash
 
 
-class college:
-
+class College:
+    @staticmethod
+    def get_by_code(college_code):
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cur.execute("SELECT collegecode, collegename FROM college WHERE collegecode = %s", (college_code,))
+        college = cur.fetchone()
+        cur.close()
+        return college
+    
     @staticmethod
     def collegehome():
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -16,31 +23,61 @@ class college:
         return colleges
     
     @staticmethod
-    def add_college(collegecode,collegename):
+    def add_college(collegecode, collegename):
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cur.execute("INSERT INTO college (collegecode, collegename) VALUES (%s, %s)", (collegecode, collegename))
-        mysql.connection.commit()
-        flash("College added successfully!", "success")
+
+        # ✅ Step 1: Check if the college code already exists
+        cur.execute("SELECT collegecode FROM college WHERE collegecode = %s", (collegecode,))
+        existing_college = cur.fetchone()
+
+        if existing_college:
+            flash("College code already exists. Please try another.", "danger")
+            return False  # ❌ Prevent duplicate entry
+
+        # ✅ Step 2: Insert into the database if it doesn't exist
+        try:
+            cur.execute("INSERT INTO college (collegecode, collegename) VALUES (%s, %s)", (collegecode, collegename))
+            mysql.connection.commit()
+            flash("College added successfully!", "success")
+        except Exception as e:
+            print("Database Error:", e)  # Debugging
+            flash("An error occurred. Please try again.", "danger")
+        
         cur.close()
+        return True
+
        
     @staticmethod
-    def edit_college(college_code,college_name,collegecode):
+    def edit_college(college_code, college_name):
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute("""
+        try:
+            cursor.execute("""
                 UPDATE college
-                SET collegecode = %s, collegename = %s
+                SET collegename = %s
                 WHERE collegecode = %s
-            """, (college_code, college_name, collegecode))
+            """, (college_name, college_code))
 
-        mysql.connection.commit()
-        flash("College updated successfully!", "success")
-        cursor.close()
+            mysql.connection.commit()
+            cursor.close()
+            flash("College updated successfully!", "success")
+            return True  # ✅ Return success flag
+
+        except Exception as e:
+            print("Database Error:", e)  # ✅ Print debugging info
+            flash("Error updating college. Please try again.", "danger")
+            return False  # ❌ Return failure flag
+
+
 
     @staticmethod
-    def delete_college(college_id):
-        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cur.execute("DELETE FROM college WHERE collegecode = %s", (college_id,))
-        mysql.connection.commit()
-        flash("College deleted successfully!", "success")
-        cur.close()
+    def delete_college(college_code):
+        try:
+            cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cur.execute("DELETE FROM college WHERE collegecode = %s", (college_code,))
+            mysql.connection.commit()
+            cur.close()
+            return True  # ✅ Return success flag
+        except Exception as e:
+            print("Database Error:", e)  # Debugging
+            return False  # ❌ Handle failure gracefully
     

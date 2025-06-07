@@ -23,7 +23,7 @@
             <td>{{ course.collegecode }}</td>
             <td>
                 <a href="{{ url_for('course.edit_course', coursecode=course.coursecode) }}" class="btn btn-success">Edit</a>
-                <form action="{{ url_for('course.delete_course', coursecode=course.coursecode) }}" method="POST" style="display:inline-block;" onsubmit="return confirmDelete()">
+                <form action="{{ url_for('course.delete_course', course_code=course.coursecode) }}" method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-danger">Delete</button>
             </td>

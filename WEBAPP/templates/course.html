@@ -26,6 +26,7 @@
                 <form action="{{ url_for('course.delete_course', course_code=course.coursecode) }}" method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
             </td>
         </tr>
         {% endfor %}

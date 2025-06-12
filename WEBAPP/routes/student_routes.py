@@ -11,7 +11,21 @@ student_bp = Blueprint('students', __name__, template_folder='templates')
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
-@login_required
+@student_bp.route('/students', methods=['GET'])
+def student_list():
+    page = request.args.get('page', 1, type=int)  # ✅ Get page number from URL query
+    per_page = 10  # ✅ Number of students per page
+
+    total_students = student.get_total_students()  # ✅ Get total student count
+
+    # ✅ Ensure total pages is correctly calculated
+    total_pages = max((total_students // per_page) + (1 if total_students % per_page > 0 else 0), 1)
+
+    students = student.get_students(page, per_page)  # ✅ Fetch paginated students
+
+    return render_template('student.html', students=students, page=page, total_pages=total_pages)
+
+
 @student_bp.route('/home')
 def home():
     page = request.args.get('page', 1, type=int)
@@ -79,7 +93,7 @@ def edit_student(student_id):
     # ✅ Fetch updated data to ensure changes are displayed
     updated_student_data = student.get_student_by_id(student_id)
 
-    return render_template('home.html', student=updated_student_data)  # ✅ Reload form with new data
+    return render_template('student.html', student=updated_student_data)  # ✅ Reload form with new data
 
 
 

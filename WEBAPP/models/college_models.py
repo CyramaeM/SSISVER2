@@ -23,6 +23,14 @@ class College:
         return colleges
     
     @staticmethod
+    def get_all_colleges():
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute("SELECT collegecode, collegename FROM college")
+        colleges = cursor.fetchall()
+        cursor.close()
+        return colleges  # ✅ Return list of colleges
+    
+    @staticmethod
     def add_college(collegecode, collegename):
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
@@ -71,13 +79,32 @@ class College:
 
     @staticmethod
     def delete_college(college_code):
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
         try:
-            cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cur.execute("DELETE FROM college WHERE collegecode = %s", (college_code,))
+            # ✅ Step 1: Check if students are enrolled in courses belonging to this college
+            cursor.execute("""
+                SELECT COUNT(*) AS student_count 
+                FROM students s 
+                JOIN course c ON s.coursecode = c.coursecode 
+                WHERE c.collegebelong = %s
+            """, (college_code,))
+            
+            student_count = cursor.fetchone()["student_count"]
+
+            if student_count > 0:  # ❌ Prevent deletion if students are enrolled
+                flash("Cannot delete college. Students are still enrolled in its courses.", "danger")
+                cursor.close()
+                return False
+
+            # ✅ Step 2: Proceed with deletion if no students are enrolled
+            cursor.execute("DELETE FROM college WHERE collegecode = %s", (college_code,))
             mysql.connection.commit()
-            cur.close()
-            return True  # ✅ Return success flag
+            cursor.close()
+            flash("College deleted successfully!", "success")
+            return True
+
         except Exception as e:
             print("Database Error:", e)  # Debugging
-            return False  # ❌ Handle failure gracefully
-    
+            flash("Error deleting college. Please try again.", "danger")
+            return False

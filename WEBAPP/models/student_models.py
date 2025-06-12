@@ -6,6 +6,27 @@ import cloudinary
 
 class student:
     @staticmethod
+    def get_students(page, per_page=10):
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        
+        offset = (page - 1) * per_page  # ✅ Pagination logic
+        cursor.execute("SELECT * FROM students LIMIT %s OFFSET %s", (per_page, offset))
+        
+        students = cursor.fetchall()
+        cursor.close()
+        return students  # ✅ Return paginated students
+
+    @staticmethod
+    def get_total_students():
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute("SELECT COUNT(*) AS total FROM students")
+        result = cursor.fetchone()
+        cursor.close()
+        
+        return result["total"] if result else 0  # ✅ Return total student count safely
+
+
+    @staticmethod
     def fetch_student(per_page=10, offset=0):
         try:
             cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)

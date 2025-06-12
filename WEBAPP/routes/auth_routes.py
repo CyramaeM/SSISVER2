@@ -36,18 +36,12 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
 
-        # ✅ Call model function instead of writing SQL here
-        user = auth.get_user_by_email(email)
+        success = auth.login(email, password)  # ✅ Call the method properly
 
-        if not user or not check_password_hash(user['password'], password):
-            flash("Invalid email or password", "danger")
-            return redirect(url_for('auth.login'))
-
-        # ✅ Store user_id in session properly
-        session['user_id'] = user['id']
-        flash("Login successful!", "success")
-
-        return redirect(url_for('students.home'))
+        if success:
+            return redirect(url_for('students.home'))  # ✅ Redirect only if login succeeds
+        else:
+            return redirect(url_for('auth.login'))  # ❌ Prevent redirect loop
     
     return render_template('login.html')
 

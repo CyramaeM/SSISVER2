@@ -12,9 +12,6 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 @course_bp.route('/coursehome', methods=['GET', 'POST'])
 def course():
-    if 'user_id' not in session:
-        flash("You must log in first!", "danger")
-        return redirect(url_for('auth.login'))
 
     courses = Course.coursehome()  # ✅ Correct function call
 
@@ -23,30 +20,24 @@ def course():
 
 @course_bp.route('/addcourse', methods=['GET', 'POST'])
 def add_course():
-    if 'user_id' not in session:
-        flash("You must log in first!", "danger")
-        return redirect(url_for('auth.login'))
+    colleges = College.get_all_colleges()  # ✅ Correct function name
 
     if request.method == 'POST':
         course_code = request.form.get('coursecode', '').strip()
         course_name = request.form.get('coursename', '').strip()
         college_belong = request.form.get('college', '').strip()
 
-        success = Course.add_course(course_code, course_name, college_belong)  # ✅ Call the function
+        success = Course.add_course(course_code, course_name, college_belong)
 
         if success:
-            return redirect(url_for('course.course'))  # ✅ Redirect on success
+            return redirect(url_for('course.course'))  
 
-    return render_template('add_course.html')
+    return render_template('add_course.html', colleges=colleges)  # ✅ Pass colleges to template
 
 
 
 @course_bp.route('/edit_course/<string:coursecode>', methods=['GET', 'POST'])
 def edit_course(coursecode):
-    if 'user_id' not in session:
-        flash("You must log in first!", "danger")
-        return redirect(url_for('auth.login'))
-
     if request.method == 'POST':
         course_name = request.form.get('coursename', '').strip()
         updated_course_code = request.form.get('coursecode', '').strip()  # ✅ Get coursecode from the form

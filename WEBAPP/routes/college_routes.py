@@ -10,21 +10,12 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 @college_bp.route('/collegehome',methods=['GET','POST'])
 def college():
-    if 'user_id' not in session:
-        flash("You must log in first!", "danger")
-        return redirect(url_for('auth.login'))  # ✅ Fix incorrect controller reference
-
-    # ✅ Correct model reference
     colleges = College.collegehome()
 
     return render_template('college.html', colleges=colleges)
 
 @college_bp.route('/addcollege', methods=['GET', 'POST'])
 def add_college():
-    if 'user_id' not in session:
-        flash("You must log in first!", "danger")
-        return redirect(url_for('auth.login'))
-
     if request.method == 'POST':
         collegecode = request.form['collegecode']
         collegename = request.form['collegename']
@@ -39,9 +30,6 @@ def add_college():
 
 @college_bp.route('/edit_college/<string:college_code>', methods=['GET', 'POST'])
 def edit_college(college_code):
-    if 'user_id' not in session:
-        flash("You must log in first!", "danger")
-        return redirect(url_for('auth.login'))
 
     if request.method == 'POST':
         college_name = request.form.get('college_name', '').strip()
@@ -70,15 +58,11 @@ def edit_college(college_code):
 
 @college_bp.route('/delete_college/<string:college_code>', methods=['POST'])
 def delete_college(college_code):
-    if 'user_id' not in session:
-        flash("You must log in first!", "danger")
-        return redirect(url_for('auth.login'))
-
-    success = College.delete_college(college_code)  # ✅ Pass the parameter correctly
+    success = College.delete_college(college_code)  # ✅ Attempt deletion
 
     if success:
         flash("College deleted successfully!", "success")
     else:
-        flash("Error deleting college. Please try again.", "danger")
+        flash("Cannot delete college. Students are still enrolled in its courses.", "danger")
 
     return redirect(url_for('college.college'))

@@ -42,15 +42,24 @@ class Course:
     def add_course(course_code, course_name, college_belong):
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-        # ✅ Step 1: Check if the course code already exists
-        cursor.execute("SELECT coursecode FROM course WHERE coursecode = %s", (course_code,))
+        # ✅ Check if the course already exists
+        cursor.execute("SELECT coursecode, deleted FROM course WHERE coursecode = %s", (course_code,))
         existing_course = cursor.fetchone()
 
         if existing_course:
-            flash("Course code already exists. Please try another.", "danger")
-            return False  # ❌ Prevent duplicate entry
+            if existing_course.get('deleted') is not None:  # ✅ Reactivate deleted course
+                cursor.execute("""
+                    UPDATE course SET deleted = NULL, coursename = %s, collegebelong = %s WHERE coursecode = %s
+                """, (course_name, college_belong, course_code))
+                mysql.connection.commit()
+                cursor.close()
+                flash("Course reactivated successfully!", "success")
+                return True
+            else:
+                flash("Course code already exists. Please try another.", "danger")
+                return False  # ❌ Prevent duplicate entry
 
-        # ✅ Step 2: Insert into the database if it doesn't exist
+        # ✅ Insert new course if it doesn't exist
         try:
             cursor.execute("""
                 INSERT INTO course (coursecode, coursename, collegebelong)
@@ -60,12 +69,13 @@ class Course:
             mysql.connection.commit()
             cursor.close()
             flash("Course added successfully!", "success")
-            return True  # ✅ Return success flag
+            return True
 
         except Exception as e:
-            print("Database Error:", e)  # Debugging
+            print("Database Error:", e)
             flash("An error occurred. Please try again.", "danger")
-            return False  # ❌ Handle failure gracefully
+            return False
+
 
 
     @staticmethod
@@ -92,13 +102,26 @@ class Course:
     @staticmethod
     def delete_course(course_code):
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
         try:
+            # ✅ Step 1: Check if students are enrolled in the course
+            cursor.execute("SELECT COUNT(*) AS student_count FROM students WHERE coursecode = %s", (course_code,))
+            student_count = cursor.fetchone()["student_count"]
+
+            if student_count > 0:  # ❌ Prevent deletion if students are enrolled
+                flash("Cannot delete course. Students are enrolled in it.", "danger")
+                cursor.close()
+                return False
+
+            # ✅ Step 2: Proceed with deletion if no students are enrolled
             cursor.execute("DELETE FROM course WHERE coursecode = %s", (course_code,))
             mysql.connection.commit()
             cursor.close()
             flash("Course deleted successfully!", "success")
-            return True  # ✅ Return success flag
+            return True
+
         except Exception as e:
             print("Database Error:", e)  # Debugging
             flash("Error deleting course. Please try again.", "danger")
-            return False  # ❌ Handle failure gracefully
+            return False
+

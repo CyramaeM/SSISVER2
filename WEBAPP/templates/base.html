@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}My Flask App{% endblock %}</title>
-    <link rel="stylesheet" href='/static/styles.css'>
+    <link rel="stylesheet" href='/static/style.css'>
     <link rel="stylesheet" href='/static/form.css'>
     <link rel="stylesheet" href='/static/base.css'>
     <link rel="stylesheet" href='/static/add.css'>
@@ -13,8 +13,6 @@
 <body>
     <nav class="navbar">
         <ul>
-            {% if 'user_id' in session %}
-                <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
                 <li><a href="{{ url_for('students.home') }}">Student</a></li>
                 <li><a href="{{ url_for('college.college') }}">College</a></li>
                 <li><a href="{{ url_for('course.course') }}">Course</a></li>
@@ -24,10 +22,6 @@
                         <button type="submit">Search</button>
                     </form>
                 </li>
-            {% else %}
-                <li><a href="{{ url_for('auth.signup') }}">Sign Up</a></li>
-                <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
-            {% endif %}
         </ul>
     </nav>
     

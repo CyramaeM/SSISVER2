@@ -10,7 +10,6 @@ html, body {
     flex-direction: column;
 }
 
-/* Navbar styling */
 .navbar {
     background-color: #333;
     overflow: hidden;
@@ -18,7 +17,9 @@ html, body {
     width: 100%;
     top: 0;
     z-index: 1000;
-    justify-content: space-between;
+    display: flex; /* ✅ Ensure navbar behaves like a flex container */
+    justify-content: center;
+    align-items: center;
     padding: 14px 20px;
 }
 
@@ -26,11 +27,13 @@ html, body {
     list-style-type: none;
     margin: 0;
     padding: 0;
-    flex: 1;
+    display: flex;  /* ✅ Use flex to align items */
+    justify-content: center;
+    align-items: center;
 }
 
 .navbar ul li {
-    float: left;
+    margin-right: 20px;
 }
 
 .navbar ul li a {
@@ -43,4 +46,5 @@ html, body {
 
 .navbar ul li a:hover {
     background-color: #575757;
+    border-radius: 5px;
 }

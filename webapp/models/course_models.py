@@ -5,7 +5,15 @@ from flask import  flash
 
 
 class Course:
-
+    @staticmethod
+    def get_by_code(code):
+        from webapp.database import mysql
+        cur = mysql.connection.cursor()
+        query = "SELECT * FROM course WHERE coursecode = %s"
+        cur.execute(query, (code,))
+        result = cur.fetchone()
+        cur.close()
+        return result
     @staticmethod
     def get_all():
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -90,7 +98,6 @@ class Course:
 
             mysql.connection.commit()
             cursor.close()
-            flash("Course updated successfully!", "success")
             return True  # ✅ Return success flag
 
         except Exception as e:

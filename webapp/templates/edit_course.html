@@ -6,14 +6,13 @@
 <div class="form-container">
     <h1>Edit Course</h1>
     <form id="editCourseForm" action="{{ url_for('course.edit_course', coursecode=course.coursecode) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
 
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        
         <!-- Course Code -->
         <div class="form-group">
             <label for="course_code">Course Code:</label>
-            <input type="text" name="course_code" id="course_code" value="{{ course.coursecode }}" class="form-control" required>
+            <input type="text" name="course_code" id="course_code" value="{{ course.coursecode }}" class="form-control" readonly required>
         </div>
         
         <!-- Course Name -->

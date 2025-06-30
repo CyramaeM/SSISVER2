@@ -63,7 +63,8 @@ def edit_course(coursecode):
     return render_template(
         'edit_course.html', 
         course=course, 
-        colleges=colleges
+        colleges=colleges,
+        csrf_token=generate_csrf()
     )
 
 

@@ -81,30 +81,11 @@ class College:
     def delete_college(college_code):
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-        try:
-            # ✅ Step 1: Check if students are enrolled in courses belonging to this college
-            cursor.execute("""
-                SELECT COUNT(*) AS student_count 
-                FROM students s 
-                JOIN course c ON s.coursecode = c.coursecode 
-                WHERE c.collegebelong = %s
-            """, (college_code,))
-            
-            student_count = cursor.fetchone()["student_count"]
 
-            if student_count > 0:  # ❌ Prevent deletion if students are enrolled
-                flash("Cannot delete college. Students are still enrolled in its courses.", "danger")
-                cursor.close()
-                return False
 
-            # ✅ Step 2: Proceed with deletion if no students are enrolled
-            cursor.execute("DELETE FROM college WHERE collegecode = %s", (college_code,))
-            mysql.connection.commit()
-            cursor.close()
-            flash("College deleted successfully!", "success")
-            return True
-
-        except Exception as e:
-            print("Database Error:", e)  # Debugging
-            flash("Error deleting college. Please try again.", "danger")
-            return False
+        # ✅ Step 2: Proceed with deletion if no students are enrolled
+        cursor.execute("DELETE FROM college WHERE collegecode = %s", (college_code,))
+        mysql.connection.commit()
+        cursor.close()
+        flash("College deleted successfully!", "success")
+        return True

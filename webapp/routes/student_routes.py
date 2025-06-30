@@ -1,7 +1,9 @@
 from flask import render_template, url_for, redirect, request, flash, Blueprint
 from flask_login import login_required
+from flask_wtf.csrf import generate_csrf
 import MySQLdb
 import cloudinary
+import cloudinary.uploader
 import re
 from webapp.controller import login
 from webapp.models.student_models import student
@@ -26,6 +28,7 @@ def student_list():
     return render_template('student.html', students=students, page=page, total_pages=total_pages)
 
 
+
 @student_bp.route('/home')
 def home():
     page = request.args.get('page', 1, type=int)
@@ -39,8 +42,8 @@ def home():
 @student_bp.route('/addstudent', methods=['GET', 'POST'])
 def add_student():
     if request.method == 'GET':
-        return render_template('add_student.html', courses=student.get_courses())  # ✅ Call model function
-
+        return render_template('add_student.html', courses=student.get_courses())
+    
     # Retrieve form data
     stud_id = request.form.get('stud_id', '').strip()
     fname = request.form.get('fname', '').strip()
@@ -49,56 +52,78 @@ def add_student():
     yearlevel = request.form.get('yearlevel', '').strip()
     gender = request.form.get('gender', '').strip()
     profile_photo = request.files.get('profile_photo')
-
+    
     # Validate required fields
     if not stud_id or not fname or not lname or not course:
         flash("All fields are required!", "error")
-        return redirect(url_for('student_bp.add_student'))
-
-    # Handle profile photo
-    photo_url = profile_photo.filename if profile_photo else None  
-    photo_public_id = "some_unique_id"
-
+        return redirect(url_for('students.add_student'))
+    
+    # Handle profile photo upload to Cloudinary
+    photo_url = None
+    photo_public_id = None
+    
+    if profile_photo and profile_photo.filename != '':
+        try:
+            # Upload to Cloudinary
+            upload_result = cloudinary.uploader.upload(
+                profile_photo,
+                folder="student_profiles/"
+            )
+            photo_url = upload_result['secure_url']
+            photo_public_id = upload_result['public_id']
+        except Exception as e:
+            print("Cloudinary Upload Error:", e)
+            flash("Error uploading profile photo. Student added without photo.", "warning")
+    
     try:
-        student.add_student(stud_id, fname, lname, course, yearlevel, gender, photo_url, photo_public_id)  # ✅ Only call the model
+        student.add_student(stud_id, fname, lname, course, yearlevel, gender, photo_url, photo_public_id)
         flash("Student added successfully!", "success")
     except Exception as e:
         print("Database Error:", e)
         flash("An error occurred while adding the student. Try again.", "error")
-
+    
     return redirect(url_for('students.home'))
 
 
 @student_bp.route('/edit_student/<string:student_id>', methods=['GET', 'POST'])
 def edit_student(student_id):
-    if request.method == 'GET':  # Show the form
-        student_data = student.get_student_by_id(student_id)  # ✅ Fetch current student data
-        if not student_data:
-            flash("Student not found!", "error")
+    courses = student.get_courses()  # Get courses for dropdown
+    
+    if request.method == 'POST':
+        fname = request.form.get('fname', '').strip()
+        lname = request.form.get('lname', '').strip()
+        course = request.form.get('course', '').strip()
+        yearlevel = request.form.get('yearlevel', '').strip()
+        gender = request.form.get('gender', '').strip()
+
+        if not all([fname, lname, course, yearlevel, gender]):
+            flash("All fields are required!", "danger")
+            return redirect(url_for('students.edit_student', student_id=student_id))
+
+        success = student.edit_student(student_id, fname, lname, course, yearlevel, gender)
+
+        if success:
+            flash("Student updated successfully!", "success")
             return redirect(url_for('students.home'))
+        else:
+            flash("Error updating student. Please try again.", "danger")
+            return redirect(url_for('students.edit_student', student_id=student_id))
 
-        return render_template('edit_student.html', student=student_data)  # ✅ Display form
+    # GET request – fetch data for form
+    student_data = student.get_student_by_id(student_id.strip())
+    # student_data = student.get_by_id(student_id.strip())
+    
+    if not student_data:
+        flash("Student not found!", "danger")
+        return redirect(url_for('students.home'))
 
-    # Handle form submission on POST request
-    fname = request.form.get('fname', '')
-    lname = request.form.get('lname', '')
-    course = request.form.get('course', '')
-    yearlevel = request.form.get('yearlevel', '')
-    gender = request.form.get('gender', '')
-
-    student.edit_student(student_id, fname, lname, course, yearlevel, gender)
-
-    flash("Student updated successfully!", "success")
-
-    # ✅ Fetch updated data to ensure changes are displayed
-    updated_student_data = student.get_student_by_id(student_id)
-
-    return render_template('student.html', student=updated_student_data, page=1, total_pages=1)
-  # ✅ Reload form with new data
+    return render_template("edit_student.html", 
+                           student=student_data, 
+                           courses=courses,
+                           csrf_token=generate_csrf())
 
 
-
-@student_bp.route('/student/delete_student//<string:student_id>',methods=['GET','POST'])
+@student_bp.route('/delete_student/<string:student_id>', methods=['POST'])
 def delete_student(student_id):
     student.delete_student(student_id)
     return redirect(url_for('students.home'))

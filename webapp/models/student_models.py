@@ -57,6 +57,21 @@ class student:
         courses = [row['coursecode'] for row in cur.fetchall()]
         cur.close()
         return courses
+    
+    @staticmethod
+    def get_by_id(student_id):
+        from webapp.database import mysql
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM students WHERE id_number = %s", (student_id,))
+        row = cur.fetchone()
+        if row is None:
+            cur.close()
+            return None
+        columns = [col[0] for col in cur.description]
+        result = dict(zip(columns, row))
+        cur.close()
+        return result
+    
 
     @staticmethod
     def add_student(stud_id, fname, lname, course, yearlevel, gender, photo_url, photo_public_id):
@@ -66,7 +81,6 @@ class student:
                     INSERT INTO students (id_number, fname, lname, course, yearlevel, gender, profile, profile_id) 
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """, (stud_id, fname, lname, course, yearlevel, gender, photo_url, photo_public_id))
-                
                 mysql.connection.commit()
         except Exception as e:
             print("Database Error:", e)
@@ -80,18 +94,22 @@ class student:
         cur.close()
         return student_data
 
-    
     @staticmethod
     def edit_student(id_number, fname, lname, course, yearlevel, gender):
+        from webapp.database import mysql
+        import MySQLdb.cursors
+
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cur.execute("""
             UPDATE students 
             SET fname=%s, lname=%s, course=%s, yearlevel=%s, gender=%s 
             WHERE id_number=%s
-        """, (fname, lname, course, yearlevel, gender, id_number))  # ✅ Fix argument order
-
-        mysql.connection.commit()  # ✅ Commit changes
+        """, (fname, lname, course, yearlevel, gender, id_number))
+        mysql.connection.commit()
+        row_count = cur.rowcount
         cur.close()
+        return row_count > 0  # Return True if a row was updated
+
 
 
     @staticmethod

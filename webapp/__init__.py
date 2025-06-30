@@ -1,6 +1,6 @@
 from flask import Flask, render_template,request
 from webapp.database import mysql
-from config import DB_USERNAME, DB_PASSWORD, DB_NAME, DB_HOST, SECRET_KEY
+from config import DB_USERNAME, DB_PASSWORD, DB_NAME, DB_HOST, SECRET_KEY,CLOUDINARY_CLOUD_NAME,CLOUDINARY_API_KEY,CLOUDINARY_API_SECRET
 from webapp.models.student_models import student
 from flask_wtf.csrf import CSRFProtect
 import cloudinary
@@ -23,9 +23,9 @@ def create_app():
     )
 
     cloudinary.config(
-        cloud_name = 'dbth29nsw',
-        api_key = '875432953529479',
-        api_secret = 'Pd9SnwsUh40BXu67DaOh6LcxI4s'
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=875432953529479,
+        api_secret=CLOUDINARY_API_SECRET
         )
     mysql.init_app(app)
 
@@ -51,12 +51,11 @@ def create_app():
         
         return render_template('student.html',  students=students, page=page, total_pages=total_pages)
 
-    from.routes.auth_routes import auth_bp
+
     from .routes.college_routes import college_bp
     from .routes.course_routes import course_bp
     from .routes.student_routes import student_bp
     
-    app.register_blueprint(auth_bp,url_prefix='/auth')
     app.register_blueprint(college_bp,url_prefix='/college')
     app.register_blueprint(course_bp,url_prefix='/course')
     app.register_blueprint(student_bp,url_prefix='/student')

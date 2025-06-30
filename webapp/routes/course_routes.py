@@ -36,33 +36,35 @@ def add_course():
 
     return render_template('add_course.html', colleges=colleges)  # ✅ Pass colleges to template
 
-
-
 @course_bp.route('/edit_course/<string:coursecode>', methods=['GET', 'POST'])
 def edit_course(coursecode):
+    colleges = College.get_all_colleges()  # Fetch colleges for dropdown
+    
     if request.method == 'POST':
         course_name = request.form.get('course_name', '').strip()
-        updated_course_code = request.form.get('course_code', '').strip()  # Corrected field names
-
-        if not course_name or not updated_course_code:
-            flash("All fields are required!", "danger")
-            return redirect(url_for('course.edit_course', coursecode=coursecode))
-
-        success = Course.edit_course(coursecode, course_name)
-
+        college_belong = request.form.get('college', '').strip() or None  # Handle empty selection
+        
+        # Update both course name and college
+        success = Course.edit_course(coursecode, course_name, college_belong)
+        
         if success:
             flash("Course updated successfully!", "success")
             return redirect(url_for('course.course'))
         else:
             flash("Error updating course. Please try again.", "danger")
 
+    # Fetch the current course data
     course = Course.get_by_code(coursecode)
-
+    
     if not course:
         flash("Course not found!", "danger")
-        return redirect(url_for('course.coursehome'))
+        return redirect(url_for('course.course'))
 
-    return render_template('edit_course.html', course=course, csrf_token=generate_csrf())
+    return render_template(
+        'edit_course.html', 
+        course=course, 
+        colleges=colleges
+    )
 
 
 @course_bp.route('/deletecourse/<string:course_code>', methods=['POST'])

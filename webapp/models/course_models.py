@@ -7,13 +7,13 @@ from flask import  flash
 class Course:
     @staticmethod
     def get_by_code(code):
-        from webapp.database import mysql
-        cur = mysql.connection.cursor()
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)  # Use DictCursor
         query = "SELECT * FROM course WHERE coursecode = %s"
         cur.execute(query, (code,))
         result = cur.fetchone()
         cur.close()
         return result
+        
     @staticmethod
     def get_all():
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -30,20 +30,17 @@ class Course:
                 course.coursecode, 
                 course.coursename, 
                 course.collegebelong, 
-                college.collegecode, 
                 college.collegename 
             FROM 
                 course 
-            JOIN 
+            LEFT JOIN 
                 college 
             ON 
                 course.collegebelong = college.collegecode
         """)
-        
         courses = cur.fetchall()
-        cur.close()  # ✅ Close the cursor
-        
-        return courses  # ✅ Return the retrieved data
+        cur.close()
+        return courses
 
     
     @staticmethod
@@ -83,28 +80,26 @@ class Course:
             print("Database Error:", e)
             flash("An error occurred. Please try again.", "danger")
             return False
-
-
-
+            
     @staticmethod
-    def edit_course(coursecode, course_name):
+    def edit_course(coursecode, course_name, college_belong=None):
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         try:
+            # Update both course name and college
             cursor.execute("""
                 UPDATE course
-                SET coursename = %s
+                SET coursename = %s, collegebelong = %s
                 WHERE coursecode = %s
-            """, (course_name, coursecode))  # ✅ Ensure correct parameter order
+            """, (course_name, college_belong, coursecode))
 
             mysql.connection.commit()
             cursor.close()
-            return True  # ✅ Return success flag
+            return True  # Success
 
         except Exception as e:
-            print("Database Error:", e)  # Debugging
+            print("Database Error:", e)
             flash("Error updating course. Please try again.", "danger")
-            return False  # ❌ Handle failure gracefully
-
+            return False
 
     @staticmethod
     def delete_course(course_code):

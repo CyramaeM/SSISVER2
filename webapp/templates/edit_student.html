@@ -1,52 +1,61 @@
 {% extends "base.html" %}
-
 {% block title %}Edit Student{% endblock %}
 
 {% block content %}
 <div class="form-container">
     <h1>Edit Student</h1>
     <form id="editStudentForm" action="{{ url_for('students.edit_student', student_id=student.id_number) }}" method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        
-        <!-- ID Number -->
-        <!-- ID Number (readonly) -->
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
         <div class="form-group">
             <label for="id_number">ID Number:</label>
             <input type="text" name="id_number" id="id_number" value="{{ student.id_number }}" readonly required>
         </div>
 
-        
-        <!-- First Name -->
         <div class="form-group">
             <label for="fname">First Name:</label>
             <input type="text" name="fname" id="fname" value="{{ student.fname }}" required>
         </div>
-        
-        <!-- Last Name -->
+
         <div class="form-group">
             <label for="lname">Last Name:</label>
             <input type="text" name="lname" id="lname" value="{{ student.lname }}" required>
         </div>
-        
-        <!-- Course -->
+
         <div class="form-group">
-            <label for="course">Course:</label>
-            <input type="text" name="course" id="course" value="{{ student.course }}" required>
+            <label for="course">Course</label>
+            <select class="form-control" id="course" name="course" required>
+                {% for course_code in courses %}
+                    <option value="{{ course_code }}"
+                        {% if student.course == course_code %}selected{% endif %}>
+                        {{ course_code }}
+                    </option>
+                {% endfor %}
+            </select>
         </div>
-        
-        <!-- Year Level -->
+
         <div class="form-group">
-            <label for="yearlevel">Year Level:</label>
-            <input type="text" name="yearlevel" id="yearlevel" value="{{ student.yearlevel }}" required>
+            <label for="yearlevel">Year Level</label>
+            <input type="number" class="form-control" id="yearlevel" name="yearlevel" 
+                value="{{ student.yearlevel }}" min="1" max="4" required>
         </div>
-        
-        <!-- Gender -->
+
         <div class="form-group">
-            <label for="gender">Gender:</label>
-            <input type="text" name="gender" id="gender" value="{{ student.gender }}" required>
+            <label>Gender</label>
+            <div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="gender" id="male" 
+                        value="Male" {% if student.gender == 'Male' %}checked{% endif %}>
+                    <label class="form-check-label" for="male">Male</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="gender" id="female" 
+                        value="Female" {% if student.gender == 'Female' %}checked{% endif %}>
+                    <label class="form-check-label" for="female">Female</label>
+                </div>
+            </div>
         </div>
-        
-        <!-- Submit Button -->
+
         <button type="submit">Update</button>
     </form>
 </div>

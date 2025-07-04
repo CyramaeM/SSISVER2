@@ -5,8 +5,39 @@
 {% block content %}
 <div class="form-container">
     <h1>Edit Student</h1>
-    <form id="editStudentForm" action="{{ url_for('students.edit_student', student_id=student.id_number) }}" method="POST">
+    <form id="editStudentForm" action="{{ url_for('students.edit_student', student_id=student.id_number) }}" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        
+        <!-- Profile Photo Preview -->
+        <div class="form-group">
+            <label>Current Profile Photo:</label>
+            <div>
+                {% if student.profile %}
+                    <img id="profilePreview" src="{{ student.profile }}" style="width:150px;height:150px;object-fit:cover;border-radius:50%;">
+                {% else %}
+                    <div id="profilePreview" style="width:150px;height:150px;background:#eee;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                        No Image
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Remove Photo Option -->
+            {% if student.profile %}
+            <div style="margin-top: 10px;">
+                <label>
+                    <input type="checkbox" name="remove_photo" id="remove_photo">
+                    Remove current photo
+                </label>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- New Photo Upload -->
+        <div class="form-group">
+            <label for="profile_photo">Update Profile Photo:</label>
+            <input type="file" name="profile_photo" id="profile_photo" accept="image/*" onchange="previewImage(event)">
+            <small>JPG, PNG, or JPEG (max 5MB)</small>
+        </div>
         
         <!-- ID Number -->
         <div class="form-group">
@@ -30,10 +61,10 @@
         <div class="form-group">
             <label for="course">Course:</label>
             <select name="course" id="course" required>
-                {% for course_code in courses %}
-                    <option value="{{ course_code }}" 
-                        {% if student.course == course_code %}selected{% endif %}>
-                        {{ course_code }}
+                {% for code, name in courses.items() %}
+                    <option value="{{ code }}" 
+                        {% if student.course == code %}selected{% endif %}>
+                        {{ name }} ({{ code }})
                     </option>
                 {% endfor %}
             </select>
@@ -69,4 +100,33 @@
         <button type="submit">Update</button>
     </form>
 </div>
+
+<script>
+    function previewImage(event) {
+        const preview = document.getElementById('profilePreview');
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        
+        // Remove "remove photo" option when uploading new photo
+        const removeCheckbox = document.getElementById('remove_photo');
+        if (removeCheckbox) removeCheckbox.checked = false;
+        
+        reader.onload = function() {
+            if (preview.tagName === 'IMG') {
+                preview.src = reader.result;
+            } else {
+                // Replace div with image
+                const img = document.createElement('img');
+                img.id = 'profilePreview';
+                img.src = reader.result;
+                img.style = 'width:150px;height:150px;object-fit:cover;border-radius:50%;';
+                preview.parentNode.replaceChild(img, preview);
+            }
+        }
+        
+        if (file) {
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
 {% endblock %}

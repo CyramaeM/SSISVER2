@@ -103,10 +103,10 @@ def add_student():
     
     return redirect(url_for('students.home'))
 
-
 @student_bp.route('/edit_student/<string:student_id>', methods=['GET', 'POST'])
 def edit_student(student_id):
-    courses = student.get_courses()  # Get courses for dropdown
+    # Get course details for dropdown
+    course_details = student.get_course_details()
     
     if request.method == 'POST':
         fname = request.form.get('fname', '').strip()
@@ -114,13 +114,61 @@ def edit_student(student_id):
         course = request.form.get('course', '').strip()
         yearlevel = request.form.get('yearlevel', '').strip()
         gender = request.form.get('gender', '').strip()
+        profile_photo = request.files.get('profile_photo')
+        remove_photo = request.form.get('remove_photo') == 'on'
 
         if not all([fname, lname, course, yearlevel, gender]):
             flash("All fields are required!", "danger")
             return redirect(url_for('students.edit_student', student_id=student_id))
 
         try:
-            student.edit_student(student_id, fname, lname, course, yearlevel, gender)
+            # Handle profile photo changes
+            photo_url = None
+            photo_public_id = None
+            
+            # Get current student data to check existing photo
+            current_student = student.get_student_by_id(student_id)
+            
+            if profile_photo and profile_photo.filename != '':
+                # Upload new photo to Cloudinary
+                upload_result = cloudinary.uploader.upload(
+                    profile_photo,
+                    folder="student_profiles/"
+                )
+                photo_url = upload_result['secure_url']
+                photo_public_id = upload_result['public_id']
+                
+                # Delete old photo if exists
+                if current_student and current_student.get('profile_id'):
+                    try:
+                        cloudinary.uploader.destroy(current_student['profile_id'])
+                    except Exception as e:
+                        print("Error deleting old profile photo:", e)
+            elif remove_photo:
+                # Delete existing photo
+                if current_student and current_student.get('profile_id'):
+                    try:
+                        cloudinary.uploader.destroy(current_student['profile_id'])
+                    except Exception as e:
+                        print("Error deleting profile photo:", e)
+            else:
+                # Keep existing photo if not changing
+                if current_student:
+                    photo_url = current_student.get('profile')
+                    photo_public_id = current_student.get('profile_id')
+
+            # Update student with new data and photo
+            student.edit_student(
+                student_id, 
+                fname, 
+                lname, 
+                course, 
+                yearlevel, 
+                gender, 
+                photo_url, 
+                photo_public_id
+            )
+            
             flash("Student updated successfully!", "success")
             return redirect(url_for('students.home'))
         except Exception as e:
@@ -137,11 +185,11 @@ def edit_student(student_id):
 
     return render_template("edit_student.html", 
                            student=student_data, 
-                           courses=courses,
+                           courses=course_details,
                            year_levels=['1', '2', '3', '4'],
                            genders=['Male', 'Female', 'Other'],
                            csrf_token=generate_csrf())
-
+                           
 @student_bp.route('/delete_student/<string:student_id>', methods=['POST'])
 def delete_student(student_id):
     student.delete_student(student_id)

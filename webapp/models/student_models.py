@@ -129,24 +129,26 @@ class student:
         cur.close()
         return student_data
 
-    @staticmethod
-    def edit_student(id_number, fname, lname, course, yearlevel, gender):
-        from webapp.database import mysql
-        import MySQLdb.cursors
-
-        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cur.execute("""
-            UPDATE students 
-            SET fname=%s, lname=%s, course=%s, yearlevel=%s, gender=%s 
-            WHERE id_number=%s
-        """, (fname, lname, course, yearlevel, gender, id_number))
-        mysql.connection.commit()
-        row_count = cur.rowcount
-        cur.close()
-        return row_count > 0  # Return True if a row was updated
-
-
-
+    def edit_student(id_number, fname, lname, course, yearlevel, gender, 
+                    photo_url=None, photo_public_id=None):
+        try:
+            with mysql.connection.cursor() as cur:
+                # Update with photo fields
+                cur.execute("""
+                    UPDATE students 
+                    SET fname=%s, lname=%s, course=%s, yearlevel=%s, 
+                        gender=%s, profile=%s, profile_id=%s
+                    WHERE id_number=%s
+                """, (
+                    fname, lname, course, yearlevel, gender, 
+                    photo_url, photo_public_id, id_number
+                ))
+                mysql.connection.commit()
+                return True
+        except Exception as e:
+            print("Database Error:", e)
+            raise e
+            
     @staticmethod
     def delete_student(student_id):
         try:

@@ -57,13 +57,67 @@
         
         <div class="form-group">
             <label for="profile_photo">Profile Photo:</label>
-            <input type="file" name="profile_photo" id="profile_photo" accept="image/*">
-            <small>JPG, PNG, or JPEG (max 5MB)</small>
+            <input type="file" name="profile_photo" id="profile_photo" accept=".png,.jpg,.jpeg,image/png,image/jpeg">
+            <small>PNG and JPG/JPEG only (max 5MB)</small>
+            <div id="fileError" style="color:red; display:none;"></div>
         </div>
         
         <button type="submit">Add Student</button>
         <a href="{{ url_for('students.home') }}" class="btn-cancel">Cancel</a>
     </form>
 </div>
+
+<script>
+function validateForm() {
+    const fileInput = document.getElementById('profile_photo');
+    const fileError = document.getElementById('fileError');
+    fileError.style.display = 'none';
+    
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const validExtensions = ['png', 'jpg', 'jpeg'];
+        const extension = file.name.split('.').pop().toLowerCase();
+        
+        // Validate file type
+        if (!validExtensions.includes(extension)) {
+            fileError.textContent = 'Invalid file type. Only PNG and JPG/JPEG images are allowed.';
+            fileError.style.display = 'block';
+            return false;
+        }
+        
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            fileError.textContent = 'File size exceeds 5MB limit.';
+            fileError.style.display = 'block';
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// Live file validation
+document.getElementById('profile_photo').addEventListener('change', function() {
+    const fileError = document.getElementById('fileError');
+    fileError.style.display = 'none';
+    
+    if (this.files.length > 0) {
+        const file = this.files[0];
+        const validExtensions = ['png', 'jpg', 'jpeg'];
+        const extension = file.name.split('.').pop().toLowerCase();
+        
+        if (!validExtensions.includes(extension)) {
+            fileError.textContent = 'Invalid file type. Only PNG and JPG/JPEG images are allowed.';
+            fileError.style.display = 'block';
+            this.value = ''; // Clear the file input
+        } else if (file.size > 5 * 1024 * 1024) {
+            fileError.textContent = 'File size exceeds 5MB limit.';
+            fileError.style.display = 'block';
+            this.value = ''; // Clear the file input
+        }
+    }
+});
+</script>
+
 
 {% endblock %}

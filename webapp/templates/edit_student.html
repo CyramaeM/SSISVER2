@@ -5,7 +5,7 @@
 {% block content %}
 <div class="form-container">
     <h1>Edit Student</h1>
-    <form id="editStudentForm" action="{{ url_for('students.edit_student', student_id=student.id_number) }}" method="POST" enctype="multipart/form-data">
+    <form id="editStudentForm" action="{{ url_for('students.edit_student', student_id=student.id_number) }}" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         
         <!-- Profile Photo Preview -->
@@ -35,8 +35,9 @@
         <!-- New Photo Upload -->
         <div class="form-group">
             <label for="profile_photo">Update Profile Photo:</label>
-            <input type="file" name="profile_photo" id="profile_photo" accept="image/*" onchange="previewImage(event)">
-            <small>JPG, PNG, or JPEG (max 5MB)</small>
+            <input type="file" name="profile_photo" id="profile_photo" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onchange="previewImage(event)">
+            <small>PNG and JPG/JPEG only (max 5MB)</small>
+            <div id="fileError" style="color:red; display:none;"></div>
         </div>
         
         <!-- ID Number -->
@@ -102,9 +103,32 @@
 </div>
 
 <script>
-    function previewImage(event) {
-        const preview = document.getElementById('profilePreview');
-        const file = event.target.files[0];
+function previewImage(event) {
+    const preview = document.getElementById('profilePreview');
+    const fileInput = event.target;
+    const fileError = document.getElementById('fileError');
+    fileError.style.display = 'none';
+    
+    // Validate file before previewing
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const validExtensions = ['png', 'jpg', 'jpeg'];
+        const extension = file.name.split('.').pop().toLowerCase();
+        
+        if (!validExtensions.includes(extension)) {
+            fileError.textContent = 'Invalid file type. Only PNG and JPG/JPEG images are allowed.';
+            fileError.style.display = 'block';
+            fileInput.value = ''; // Clear the invalid file
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+            fileError.textContent = 'File size exceeds 5MB limit.';
+            fileError.style.display = 'block';
+            fileInput.value = ''; // Clear the invalid file
+            return;
+        }
+        
         const reader = new FileReader();
         
         // Remove "remove photo" option when uploading new photo
@@ -124,9 +148,34 @@
             }
         }
         
-        if (file) {
-            reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
+    }
+}
+
+function validateForm() {
+    const fileInput = document.getElementById('profile_photo');
+    const fileError = document.getElementById('fileError');
+    fileError.style.display = 'none';
+    
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const validExtensions = ['png', 'jpg', 'jpeg'];
+        const extension = file.name.split('.').pop().toLowerCase();
+        
+        if (!validExtensions.includes(extension)) {
+            fileError.textContent = 'Invalid file type. Only PNG and JPG/JPEG images are allowed.';
+            fileError.style.display = 'block';
+            return false;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+            fileError.textContent = 'File size exceeds 5MB limit.';
+            fileError.style.display = 'block';
+            return false;
         }
     }
+    
+    return true;
+}
 </script>
 {% endblock %}

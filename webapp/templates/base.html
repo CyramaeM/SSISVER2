@@ -17,10 +17,10 @@
                 <li><a href="{{ url_for('college.college') }}">College</a></li>
                 <li><a href="{{ url_for('course.course') }}">Course</a></li>
                 <li>
-                    <form action="{{ url_for('students.home') }}" method="GET" class="search-form">
-                        <input type="text" name="query" placeholder="Search..." required>
-                        <button type="submit">Search</button>
-                    </form>
+                    <div class="search-form">
+                        <input type="text" id="globalSearch" placeholder="Search ...">
+                        <button id="searchButton"><i class="fas fa-search"></i> Search</button>
+                    </div>
                 </li>
         </ul>
     </nav>
@@ -40,5 +40,44 @@
     <div class="content">
         {% block content %}{% endblock %}
     </div>
+    
+    <script>
+    // Global table search functionality
+    function filterTable() {
+        const input = document.getElementById("globalSearch");
+        const filter = input.value.toLowerCase();
+        const tables = document.querySelectorAll("table");
+        
+        tables.forEach(table => {
+            const tr = table.querySelectorAll("tbody tr");
+            
+            for (let i = 0; i < tr.length; i++) {
+                const tds = tr[i].querySelectorAll("td");
+                let found = false;
+                
+                for (let j = 0; j < tds.length; j++) {
+                    if (tds[j]) {
+                        const txtValue = tds[j].textContent || tds[j].innerText;
+                        if (txtValue.toLowerCase().includes(filter)) {
+                            found = true;
+                            break; // Show row if any cell matches
+                        }
+                    }
+                }
+                
+                tr[i].style.display = found ? "" : "none";
+            }
+        });
+    }
+
+    // Add event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('globalSearch');
+        const searchButton = document.getElementById('searchButton');
+        
+        searchInput.addEventListener('input', filterTable);
+        searchButton.addEventListener('click', filterTable);
+    });
+    </script>
 </body>
 </html>

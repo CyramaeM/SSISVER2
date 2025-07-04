@@ -26,8 +26,8 @@
             <label for="course">Course:</label>
             <select name="course" id="course" required>
                 <option value="">Select Course</option>
-                {% for course in courses %}
-                    <option value="{{ course }}">{{ course }}</option>
+                {% for code, name in course_details.items() %}
+                    <option value="{{ code }}">{{ name }} ({{ code }})</option>
                 {% endfor %}
             </select>
         </div>

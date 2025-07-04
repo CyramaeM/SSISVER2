@@ -32,7 +32,13 @@
             <td>{{ student.id_number }}</td>
             <td>{{ student.fname }}</td>
             <td>{{ student.lname }}</td>
-            <td>{{ student.course }}</td>
+            <td>
+                {% if course_details[student.course] %}
+                    {{ course_details[student.course] }} ({{ student.course }})
+                {% else %}
+                    {{ student.course }} <!-- Fallback to just course code -->
+                {% endif %}
+            </td>
             <td>{{ student.yearlevel }}</td>
             <td>
                 <a href="{{ url_for('students.edit_student', student_id=student.id_number) }}" class="btn btn-success">Edit</a>

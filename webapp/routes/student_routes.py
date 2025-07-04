@@ -15,34 +15,44 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 @student_bp.route('/students', methods=['GET'])
 def student_list():
-    page = request.args.get('page', 1, type=int)  # ✅ Get page number from URL query
-    per_page = 10  # ✅ Number of students per page
-
-    total_students = student.get_total_students()  # ✅ Get total student count
-
-    # ✅ Ensure total pages is correctly calculated
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    total_students = student.get_total_students()
     total_pages = max((total_students // per_page) + (1 if total_students % per_page > 0 else 0), 1)
-
-    students = student.get_students(page, per_page)  # ✅ Fetch paginated students
-
-    return render_template('student.html', students=students, page=page, total_pages=total_pages)
-
+    students = student.get_students(page, per_page)
+    
+    # Get course details for formatting
+    course_details = student.get_course_details()
+    
+    return render_template('student.html', 
+                           students=students, 
+                           page=page, 
+                           total_pages=total_pages,
+                           course_details=course_details)
 
 
 @student_bp.route('/home')
 def home():
     page = request.args.get('page', 1, type=int)
     per_page = 10
-    offset = (page - 1) * per_page  # Calculate the correct offset
-
-    total_pages, students = student.fetch_student(per_page, offset)  # Fetch paginated data
-
-    return render_template('student.html', page=page, total_pages=total_pages, students=students)
+    offset = (page - 1) * per_page
+    total_pages, students = student.fetch_student(per_page, offset)
+    
+    # Get course details for formatting
+    course_details = student.get_course_details()
+    
+    return render_template('student.html', 
+                           page=page, 
+                           total_pages=total_pages, 
+                           students=students,
+                           course_details=course_details)
 
 @student_bp.route('/addstudent', methods=['GET', 'POST'])
 def add_student():
     if request.method == 'GET':
-        return render_template('add_student.html', courses=student.get_courses())
+        # Get course details for dropdown
+        course_details = student.get_course_details()
+        return render_template('add_student.html', course_details=course_details)
     
     # Retrieve form data
     stud_id = request.form.get('stud_id', '').strip()

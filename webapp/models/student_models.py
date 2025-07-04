@@ -5,16 +5,21 @@ import cloudinary
 
 
 class student:
-    @staticmethod
     def get_students(page, per_page=10):
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         
-        offset = (page - 1) * per_page  # ✅ Pagination logic
-        cursor.execute("SELECT * FROM students LIMIT %s OFFSET %s", (per_page, offset))
+        offset = (page - 1) * per_page
+        # Updated query to join with course table
+        cursor.execute("""
+            SELECT s.*, c.coursename 
+            FROM students s
+            LEFT JOIN course c ON s.course = c.coursecode
+            LIMIT %s OFFSET %s
+        """, (per_page, offset))
         
         students = cursor.fetchall()
         cursor.close()
-        return students  # ✅ Return paginated students
+        return students
 
     @staticmethod
     def get_total_students():
@@ -31,24 +36,35 @@ class student:
         try:
             cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             
-            # Get paginated students
-            cur.execute("SELECT * FROM students LIMIT %s OFFSET %s", (per_page, offset))
+            # Updated query to join with course table
+            cur.execute("""
+                SELECT s.*, c.coursename 
+                FROM students s
+                LEFT JOIN course c ON s.course = c.coursecode
+                LIMIT %s OFFSET %s
+            """, (per_page, offset))
             students = cur.fetchall()
             
             # Get total student count
             cur.execute("SELECT COUNT(*) AS total FROM students")
             total_students = cur.fetchone()['total']
-            cur.close()  # Close cursor AFTER both queries
+            cur.close()
             
-            # Handle zero students case
             total_pages = max(1, (total_students + per_page - 1) // per_page)  
-            
             return total_pages, students
             
         except Exception as e:
             print(f"Database Error in home(): {e}")
             flash("Failed to load student list", "danger")
-            return 1, []  # Return safe defaults
+            return 1, []
+
+    @staticmethod
+    def get_course_details():
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cur.execute("SELECT coursecode, coursename FROM course")  
+        courses = {row['coursecode']: row['coursename'] for row in cur.fetchall()}
+        cur.close()
+        return courses
 
     @staticmethod
     def get_courses():
@@ -104,7 +120,7 @@ class student:
             print("Database Error:", e)
             mysql.connection.rollback()
             raise e  # Re-raise to handle in controller
-            
+
     @staticmethod
     def get_student_by_id(student_id):
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)

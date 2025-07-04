@@ -11,7 +11,7 @@
         <!-- Profile Photo Preview -->
         <div class="form-group">
             <label>Current Profile Photo:</label>
-            <div>
+            <div id="prof" style="display:flex;align-items:center;justify-content:center;">
                 {% if student.profile %}
                     <img id="profilePreview" src="{{ student.profile }}" style="width:150px;height:150px;object-fit:cover;border-radius:50%;">
                 {% else %}

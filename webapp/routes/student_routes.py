@@ -58,6 +58,11 @@ def add_student():
         flash("All fields are required!", "error")
         return redirect(url_for('students.add_student'))
     
+    # Check for duplicate student ID
+    if student.student_exists(stud_id):
+        flash("A student with that ID number already exists!", "error")
+        return redirect(url_for('students.add_student'))
+    
     # Handle profile photo upload to Cloudinary
     photo_url = None
     photo_public_id = None
@@ -78,6 +83,10 @@ def add_student():
     try:
         student.add_student(stud_id, fname, lname, course, yearlevel, gender, photo_url, photo_public_id)
         flash("Student added successfully!", "success")
+    except MySQLdb.IntegrityError as e:
+        # Handle duplicate entry specifically
+        print("Database Integrity Error:", e)
+        flash("A student with that ID number already exists!", "error")
     except Exception as e:
         print("Database Error:", e)
         flash("An error occurred while adding the student. Try again.", "error")
@@ -100,18 +109,17 @@ def edit_student(student_id):
             flash("All fields are required!", "danger")
             return redirect(url_for('students.edit_student', student_id=student_id))
 
-        success = student.edit_student(student_id, fname, lname, course, yearlevel, gender)
-
-        if success:
+        try:
+            student.edit_student(student_id, fname, lname, course, yearlevel, gender)
             flash("Student updated successfully!", "success")
             return redirect(url_for('students.home'))
-        else:
+        except Exception as e:
+            print("Error updating student:", e)
             flash("Error updating student. Please try again.", "danger")
             return redirect(url_for('students.edit_student', student_id=student_id))
 
-    # GET request – fetch data for form
+    # GET request - fetch data for form
     student_data = student.get_student_by_id(student_id.strip())
-    # student_data = student.get_by_id(student_id.strip())
     
     if not student_data:
         flash("Student not found!", "danger")
@@ -120,8 +128,9 @@ def edit_student(student_id):
     return render_template("edit_student.html", 
                            student=student_data, 
                            courses=courses,
+                           year_levels=['1', '2', '3', '4'],
+                           genders=['Male', 'Female', 'Other'],
                            csrf_token=generate_csrf())
-
 
 @student_bp.route('/delete_student/<string:student_id>', methods=['POST'])
 def delete_student(student_id):

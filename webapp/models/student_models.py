@@ -71,7 +71,19 @@ class student:
         result = dict(zip(columns, row))
         cur.close()
         return result
-    
+
+    @staticmethod
+    def student_exists(stud_id):
+        """Check if a student with given ID already exists"""
+        try:
+            cur = mysql.connection.cursor()
+            cur.execute("SELECT 1 FROM students WHERE id_number = %s", (stud_id,))
+            exists = cur.fetchone() is not None
+            cur.close()
+            return exists
+        except Exception as e:
+            print("Error checking student existence:", e)
+            return False  # Assume exists to prevent duplicates            
 
     @staticmethod
     def add_student(stud_id, fname, lname, course, yearlevel, gender, photo_url, photo_public_id):
@@ -82,10 +94,17 @@ class student:
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """, (stud_id, fname, lname, course, yearlevel, gender, photo_url, photo_public_id))
                 mysql.connection.commit()
+                return True
+        except MySQLdb.IntegrityError as e:
+            # Duplicate entry error
+            print("Integrity Error:", e)
+            mysql.connection.rollback()
+            raise e  # Re-raise to handle in controller
         except Exception as e:
             print("Database Error:", e)
-            flash("An error occurred while saving student data.", "danger")
-
+            mysql.connection.rollback()
+            raise e  # Re-raise to handle in controller
+            
     @staticmethod
     def get_student_by_id(student_id):
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)

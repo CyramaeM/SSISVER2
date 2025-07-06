@@ -71,9 +71,16 @@ def edit_course(coursecode):
 @course_bp.route('/deletecourse/<string:course_code>', methods=['POST'])
 def delete_course(course_code):
     try:
-        course.delete(course_code)
-        flash("Course has been deleted successfully")
-    except:
-        flash("Course that has students enrolled cannot be deleted")
-    
+        result = Course.delete_course(course_code)
+
+        if result:
+            # The delete method already flashes the appropriate message
+            pass
+        else:
+            flash("Course deletion failed. Please try again.", "danger")
+
+    except Exception as e:
+        print("Route Error:", e)  # Optional: log the error
+        flash("An unexpected error occurred while deleting the course.", "danger")
+
     return redirect(url_for('course.course'))

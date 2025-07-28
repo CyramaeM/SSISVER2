@@ -34,18 +34,24 @@ def student_list():
 @student_bp.route('/home')
 def home():
     page = request.args.get('page', 1, type=int)
+    query = request.args.get('query', '')  # Preserve search query
     per_page = 10
     offset = (page - 1) * per_page
-    total_pages, students = student.fetch_student(per_page, offset)
+
+    if query:
+        total_pages, students = student.search(query, per_page=per_page, offset=offset)
+    else:
+        total_pages, students = student.fetch_student(per_page, offset)
     
-    # Get course details for formatting
     course_details = student.get_course_details()
     
     return render_template('student.html', 
                            page=page, 
                            total_pages=total_pages, 
                            students=students,
-                           course_details=course_details)
+                           course_details=course_details,
+                           query=query)  # Pass query to template
+                           
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -242,15 +248,11 @@ def search_student():
         flash("Please enter a search term.", "warning")
         return redirect(url_for('students.home'))
 
-    if not re.match(r'^\d{4}-\d{4}$', query):
-        flash("Invalid search term. Only alphanumeric characters and spaces are allowed.", "danger")
-        return redirect(url_for('students.home'))
-
     total_pages, results = student.search(query, per_page=per_page, offset=offset)
     course_details = student.get_course_details()
 
     return render_template('student.html',
-                           results=results,
+                           students=results,  # Pass as 'students' for consistent template handling
                            course_details=course_details,
                            query=query,
                            page=page,

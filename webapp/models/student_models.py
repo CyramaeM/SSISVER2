@@ -173,36 +173,45 @@ class student:
             flash("An error occurred. Please try again.", "danger")
 
     @staticmethod
-    def search(query,per_page=10,offset=0):
+    def search(query, per_page=10, offset=0):
         try:
             cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cur.execute("""
-                SELECT COUNT(*) AS total FROM students
-                WHERE id_number = %s
-                OR fname LIKE %s
-                OR lname LIKE %s
-                OR course LIKE %s
-                OR gender = %s
-                OR yearlevel = %s
-            """, (query, f"%{query}%", f"%{query}%", f"%{query}%", query, query))
             
-            total_results = cur.fetchone()["total"]
+            # Count total results using exact matches
             cur.execute("""
-                SELECT id_number, fname, lname, course, yearlevel, gender, profile
+                SELECT COUNT(*) AS total 
                 FROM students
                 WHERE id_number = %s
-                OR fname LIKE %s
-                OR lname LIKE %s
-                OR course LIKE %s
-                OR gender = %s
-                OR yearlevel = %s
+                    OR fname = %s
+                    OR lname = %s
+                    OR course = %s
+                    OR gender = %s
+                    OR yearlevel = %s
+            """, (query, query, query, query, query, query))
+            
+            total_results = cur.fetchone()["total"]
+            
+            # Fetch paginated results using exact matches
+            cur.execute("""
+                SELECT s.*, c.coursename 
+                FROM students s
+                LEFT JOIN course c ON s.course = c.coursecode
+                WHERE s.id_number = %s
+                    OR s.fname = %s
+                    OR s.lname = %s
+                    OR s.course = %s
+                    OR s.gender = %s
+                    OR s.yearlevel = %s
                 LIMIT %s OFFSET %s
-            """, (query, f"%{query}%", f"%{query}%", f"%{query}%", query, query, per_page, offset))
+            """, (query, query, query, query, query, query, per_page, offset))
+            
             results = cur.fetchall()
             cur.close()
         except Exception as e:
             print("Database Error:", e)
             flash("An error occurred while searching. Please try again.", "danger")
+            total_results = 0
+            results = []
 
-        total_pages = (total_results + per_page - 1) // per_page
-        return total_pages,results 
+        total_pages = max(1, (total_results + per_page - 1) // per_page)
+        return total_pages, results

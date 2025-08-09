@@ -3,23 +3,47 @@ from webapp.database import mysql
 from flask import  flash
 import cloudinary
 
+COLUMN_MAP = {
+    'id_number': 's.id_number',
+    'fname': 's.fname',
+    'lname': 's.lname',
+    'coursename': 'c.coursename',
+    'yearlevel': 's.yearlevel'
+}    
 
 class student:
-    def get_students(page, per_page=10):
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        
-        offset = (page - 1) * per_page
-        # Updated query to join with course table
-        cursor.execute("""
-            SELECT s.*, c.coursename 
-            FROM students s
-            LEFT JOIN course c ON s.course = c.coursecode
-            LIMIT %s OFFSET %s
-        """, (per_page, offset))
-        
-        students = cursor.fetchall()
-        cursor.close()
-        return students
+
+    @staticmethod
+    def fetch_student(per_page=10, offset=0, sort_by='id_number', sort_dir='ASC'):
+        try:
+            cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            
+            # Validate and map sorting parameters
+            db_column = COLUMN_MAP.get(sort_by, 's.id_number')
+            sort_dir = 'ASC' if sort_dir.upper() not in ['ASC', 'DESC'] else sort_dir.upper()
+
+            query = f"""
+                SELECT s.*, c.coursename 
+                FROM students s
+                LEFT JOIN course c ON s.course = c.coursecode
+                ORDER BY {db_column} {sort_dir}
+                LIMIT %s OFFSET %s
+            """
+            cur.execute(query, (per_page, offset))
+            students = cur.fetchall()
+            
+            # Get total student count
+            cur.execute("SELECT COUNT(*) AS total FROM students")
+            total_students = cur.fetchone()['total']
+            cur.close()
+            
+            total_pages = max(1, (total_students + per_page - 1) // per_page)  
+            return total_pages, students
+                
+        except Exception as e:
+            print(f"Database Error in home(): {e}")
+            flash("Failed to load student list", "danger")
+            return 1, []
 
     @staticmethod
     def get_total_students():
@@ -32,17 +56,22 @@ class student:
 
 
     @staticmethod
-    def fetch_student(per_page=10, offset=0):
+    def fetch_student(per_page=10, offset=0, sort_by='id_number', sort_dir='ASC'):
         try:
             cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             
-            # Updated query to join with course table
-            cur.execute("""
+            # Validate and map sorting parameters
+            db_column = COLUMN_MAP.get(sort_by, 's.id_number')
+            sort_dir = 'ASC' if sort_dir.upper() not in ['ASC', 'DESC'] else sort_dir.upper()
+
+            query = f"""
                 SELECT s.*, c.coursename 
                 FROM students s
                 LEFT JOIN course c ON s.course = c.coursecode
+                ORDER BY {db_column} {sort_dir}
                 LIMIT %s OFFSET %s
-            """, (per_page, offset))
+            """
+            cur.execute(query, (per_page, offset))
             students = cur.fetchall()
             
             # Get total student count
@@ -52,7 +81,7 @@ class student:
             
             total_pages = max(1, (total_students + per_page - 1) // per_page)  
             return total_pages, students
-            
+                
         except Exception as e:
             print(f"Database Error in home(): {e}")
             flash("Failed to load student list", "danger")
@@ -173,40 +202,76 @@ class student:
             flash("An error occurred. Please try again.", "danger")
 
     @staticmethod
-    def search(query, per_page=10, offset=0):
+    def search(query, per_page=10, offset=0, sort_by='id_number', sort_dir='ASC'):
         try:
             cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            
-            # Count total results using exact matches
-            cur.execute("""
-                SELECT COUNT(*) AS total 
-                FROM students
-                WHERE id_number = %s
-                    OR fname = %s
-                    OR lname = %s
-                    OR course = %s
-                    OR gender = %s
-                    OR yearlevel = %s
-            """, (query, query, query, query, query, query))
-            
-            total_results = cur.fetchone()["total"]
-            
-            # Fetch paginated results using exact matches
-            cur.execute("""
-                SELECT s.*, c.coursename 
-                FROM students s
-                LEFT JOIN course c ON s.course = c.coursecode
-                WHERE s.id_number = %s
-                    OR s.fname = %s
-                    OR s.lname = %s
-                    OR s.course = %s
-                    OR s.gender = %s
-                    OR s.yearlevel = %s
-                LIMIT %s OFFSET %s
-            """, (query, query, query, query, query, query, per_page, offset))
-            
+            like_query = f"%{query}%"
+
+            # Validate and map sorting parameters
+            db_column = COLUMN_MAP.get(sort_by, 's.id_number')
+            sort_dir = 'ASC' if sort_dir.upper() not in ['ASC', 'DESC'] else sort_dir.upper()
+
+            # Determine if query is a yearlevel filter
+            is_yearlevel = query.isdigit() and query in ['1', '2', '3', '4']  # Adjust as needed
+
+            if is_yearlevel:
+                # Filter strictly by yearlevel
+                cur.execute("""
+                    SELECT COUNT(*) AS total 
+                    FROM students s
+                    LEFT JOIN course c ON s.course = c.coursecode
+                    WHERE s.yearlevel = %s
+                """, (query,))
+                total_results = cur.fetchone()["total"]
+
+                query_str = f"""
+                    SELECT s.*, c.coursename 
+                    FROM students s
+                    LEFT JOIN course c ON s.course = c.coursecode
+                    WHERE s.yearlevel = %s
+                    ORDER BY {db_column} {sort_dir}
+                    LIMIT %s OFFSET %s
+                """
+                cur.execute(query_str, (query, per_page, offset))
+
+            else:
+                # General fuzzy search across fields
+                cur.execute("""
+                    SELECT COUNT(*) AS total 
+                    FROM students s
+                    LEFT JOIN course c ON s.course = c.coursecode
+                    WHERE s.id_number LIKE %s
+                        OR s.fname LIKE %s
+                        OR s.lname LIKE %s
+                        OR s.course LIKE %s
+                        OR c.coursename LIKE %s
+                        OR s.gender = %s
+                """, (like_query, like_query, like_query, like_query, like_query, query))
+
+                total_results = cur.fetchone()["total"]
+
+                query_str = f"""
+                    SELECT s.*, c.coursename 
+                    FROM students s
+                    LEFT JOIN course c ON s.course = c.coursecode
+                    WHERE s.id_number LIKE %s
+                        OR s.fname LIKE %s
+                        OR s.lname LIKE %s
+                        OR s.course LIKE %s
+                        OR c.coursename LIKE %s
+                        OR s.gender = %s
+                    ORDER BY {db_column} {sort_dir}
+                    LIMIT %s OFFSET %s
+                """
+                cur.execute(query_str, (
+                    like_query, like_query, like_query,
+                    like_query, like_query, query,
+                    per_page, offset
+                ))
+
             results = cur.fetchall()
             cur.close()
+
         except Exception as e:
             print("Database Error:", e)
             flash("An error occurred while searching. Please try again.", "danger")
@@ -215,3 +280,4 @@ class student:
 
         total_pages = max(1, (total_results + per_page - 1) // per_page)
         return total_pages, results
+

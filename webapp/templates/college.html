@@ -11,7 +11,14 @@
         <tr>
             <th>Code</th>
             <th>Name</th>
-            <th><a href="{{ url_for('college.add_college') }}" class="btn btn-primary">Add College</a></th>
+            <th>
+                <div class="add-container" style="position: relative;">
+                    <a href="{{ url_for('college.add_college') }}" class="btn-add" title="Add College">
+                        <i class="fas fa-user-plus"></i> Add College
+                    </a>                    
+                    </div>
+                </div>
+            </th>            
         </tr>
     </thead>
     <tbody>
@@ -20,11 +27,22 @@
             <td>{{ college.collegecode }}</td>
             <td>{{ college.collegename }}</td>
             <td>
-                <a href="{{ url_for('college.edit_college', college_code=college.collegecode) }}" class="btn btn-success">Edit</a>
-                <form action="{{ url_for('college.delete_college', college_code=college.collegecode) }}" method="POST" style="display:inline-block;" onsubmit="return confirmDelete()">
+                <a href="{{ url_for('college.edit_college', college_code=college.collegecode) }}" 
+                    class="btn-action btn-edit" 
+                    title="Edit College">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <form action="{{ url_for('college.delete_college', college_code=college.collegecode) }}" 
+                        method="POST" 
+                        onsubmit="return confirmDelete()"
+                        style="display: inline;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
+                    <button type="submit" 
+                            class="btn-action btn-delete" 
+                            title="Delete College">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                </form>                
             </td>
         </tr>
         {% endfor %}

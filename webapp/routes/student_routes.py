@@ -7,7 +7,7 @@ import cloudinary.uploader
 import re
 from webapp.controller import login
 from webapp.models.student_models import student
-
+    
 student_bp = Blueprint('students', __name__, template_folder='templates')
 
 
@@ -30,27 +30,43 @@ def student_list():
                            total_pages=total_pages,
                            course_details=course_details)
 
-
 @student_bp.route('/home')
 def home():
+    # Get sorting parameters from request
+    sort_by = request.args.get('sort_by', 'id_number')
+    sort_dir = request.args.get('sort_dir', 'ASC')
+    course_details = student.get_course_details()
+    
     page = request.args.get('page', 1, type=int)
-    query = request.args.get('query', '')  # Preserve search query
+    query = request.args.get('query', '').strip()
     per_page = 10
     offset = (page - 1) * per_page
 
     if query:
-        total_pages, students = student.search(query, per_page=per_page, offset=offset)
+        total_pages, students = student.search(
+            query, 
+            per_page=per_page, 
+            offset=offset,
+            sort_by=sort_by,
+            sort_dir=sort_dir
+        )
     else:
-        total_pages, students = student.fetch_student(per_page, offset)
+        total_pages, students = student.fetch_student(
+            per_page, 
+            offset,
+            sort_by=sort_by,
+            sort_dir=sort_dir
+        )
     
-    course_details = student.get_course_details()
-    
+    # Pass sorting parameters to template
     return render_template('student.html', 
                            page=page, 
                            total_pages=total_pages, 
                            students=students,
                            course_details=course_details,
-                           query=query)  # Pass query to template
+                           query=query,
+                           sort_by=sort_by,
+                           sort_dir=sort_dir)  # Pass query to template
                            
 def allowed_file(filename):
     return '.' in filename and \
@@ -67,7 +83,7 @@ def add_student():
     stud_id = request.form.get('stud_id', '').strip()
     # Validate student ID format
     if not re.match(r'^\d{4}-\d{4}$', stud_id):
-        flash('Student ID must be in format XXXX-XXXX', 'error')
+        flash('Student ID must be in format 0000-0000', 'error')
         return redirect(url_for('students.add_student'))
     
     fname = request.form.get('fname', '').strip()

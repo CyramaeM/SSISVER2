@@ -81,11 +81,8 @@ class College:
     def delete_college(college_code):
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-
-
         # ✅ Step 2: Proceed with deletion if no students are enrolled
         cursor.execute("DELETE FROM college WHERE collegecode = %s", (college_code,))
         mysql.connection.commit()
         cursor.close()
-        flash("College deleted successfully!", "success")
         return True

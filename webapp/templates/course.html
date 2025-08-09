@@ -11,7 +11,14 @@
             <th>Course Code</th>
             <th>Course Name</th>
             <th>College</th>
-            <th><a href="{{ url_for('course.add_course') }}" class="btn btn-primary">Add Course</a></th>
+            <th>
+                <div class="add-container" style="position: relative;">
+                    <a href="{{ url_for('course.add_course') }}" class="btn-add" title="Add Course">
+                        <i class="fas fa-user-plus"></i> Add Course
+                    </a>                    
+                    </div>
+                </div>
+            </th>                
         </tr>
     </thead>
     <tbody>
@@ -27,12 +34,23 @@
                 {% endif %}
             </td>
             <td>
-                <a href="{{ url_for('course.edit_course', coursecode=course.coursecode) }}" class="btn btn-success">Edit</a>
-                <form action="{{ url_for('course.delete_course', course_code=course.coursecode) }}" method="POST" onsubmit="return confirmDelete()">
+                <a href="{{ url_for('course.edit_course', coursecode=course.coursecode) }}" 
+                    class="btn-action btn-edit" 
+                    title="Edit Course">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <form action="{{ url_for('course.delete_course', course_code=course.coursecode) }}" 
+                        method="POST" 
+                        onsubmit="return confirmDelete()"
+                        style="display: inline;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </td>
+                    <button type="submit" 
+                            class="btn-action btn-delete" 
+                            title="Delete Course">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                </form>                
+            </td>                
         </tr>
         {% endfor %}
     </tbody>

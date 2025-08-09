@@ -3,18 +3,93 @@
 {% block title %}Home - Students List{% endblock %}
 
 {% block content %}
+
+{% if query %}
+    {% set base_url = 'students.search_student' %}
+{% else %}
+    {% set base_url = 'students.home' %}
+{% endif %}
+
 <h2>Student Information</h2>
+<p><em>Click on any column header to sort the table.</em></p>
 
 <table border="1" id="studentTable" class="searchable-table">
     <thead>
         <tr>
             <th>Profile</th>
-            <th>ID</th>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Course</th>
-            <th>Year Level</th>
-            <th><a href="{{ url_for('students.add_student') }}" class="btn btn-primary">Add Student</a></th>
+
+            <!-- ID Column -->
+            <th class="{% if sort_by == 'id_number' %}sorted-column{% endif %}">
+                {% set new_dir = 'ASC' if sort_by != 'id_number' or sort_dir == 'DESC' else 'DESC' %}
+                <a href="{{ url_for(base_url, query=query if query else None, page=1, sort_by='id_number', sort_dir=new_dir) }}" title="Sort by ID">
+                    ID
+                    {% if sort_by == 'id_number' %}
+                        <i class="fas fa-sort-{{ 'up' if sort_dir == 'ASC' else 'down' }}"></i>
+                    {% else %}
+                        <i class="fas fa-sort"></i>
+                    {% endif %}
+                </a>
+            </th>
+
+            <!-- First Name Column -->
+            <th class="{% if sort_by == 'fname' %}sorted-column{% endif %}">
+                {% set new_dir = 'ASC' if sort_by != 'fname' or sort_dir == 'DESC' else 'DESC' %}
+                <a href="{{ url_for(base_url, query=query if query else None, page=1, sort_by='fname', sort_dir=new_dir) }}" title="Sort by First Name">
+                    First Name
+                    {% if sort_by == 'fname' %}
+                        <i class="fas fa-sort-{{ 'up' if sort_dir == 'ASC' else 'down' }}"></i>
+                    {% else %}
+                        <i class="fas fa-sort"></i>
+                    {% endif %}
+                </a>
+            </th>
+
+            <!-- Last Name Column -->
+            <th class="{% if sort_by == 'lname' %}sorted-column{% endif %}">
+                {% set new_dir = 'ASC' if sort_by != 'lname' or sort_dir == 'DESC' else 'DESC' %}
+                <a href="{{ url_for(base_url, query=query if query else None, page=1, sort_by='lname', sort_dir=new_dir) }}" title="Sort by Last Name">
+                    Last Name
+                    {% if sort_by == 'lname' %}
+                        <i class="fas fa-sort-{{ 'up' if sort_dir == 'ASC' else 'down' }}"></i>
+                    {% else %}
+                        <i class="fas fa-sort"></i>
+                    {% endif %}
+                </a>
+            </th>
+
+            <!-- Course Column -->
+            <th class="{% if sort_by == 'coursename' %}sorted-column{% endif %}">
+                {% set new_dir = 'ASC' if sort_by != 'coursename' or sort_dir == 'DESC' else 'DESC' %}
+                <a href="{{ url_for(base_url, query=query if query else None, page=1, sort_by='coursename', sort_dir=new_dir) }}" title="Sort by Course">
+                    Course
+                    {% if sort_by == 'coursename' %}
+                        <i class="fas fa-sort-{{ 'up' if sort_dir == 'ASC' else 'down' }}"></i>
+                    {% else %}
+                        <i class="fas fa-sort"></i>
+                    {% endif %}
+                </a>
+            </th>
+
+            <!-- Year Level Column -->
+            <th class="{% if sort_by == 'yearlevel' %}sorted-column{% endif %}">
+                {% set new_dir = 'ASC' if sort_by != 'yearlevel' or sort_dir == 'DESC' else 'DESC' %}
+                <a href="{{ url_for(base_url, query=query if query else None, page=1, sort_by='yearlevel', sort_dir=new_dir) }}" title="Sort by Year Level">
+                    Year Level
+                    {% if sort_by == 'yearlevel' %}
+                        <i class="fas fa-sort-{{ 'up' if sort_dir == 'ASC' else 'down' }}"></i>
+                    {% else %}
+                        <i class="fas fa-sort"></i>
+                    {% endif %}
+                </a>
+            </th>
+
+            <th>
+                <div class="add-container">
+                    <a href="{{ url_for('students.add_student') }}" class="btn-add" title="Add New Student">
+                        <i class="fas fa-user-plus"></i> Add Student
+                    </a>
+                </div>
+            </th>
         </tr>
     </thead>
     <tbody>
@@ -41,22 +116,28 @@
             </td>
             <td>{{ student.yearlevel }}</td>
             <td>
-                <a href="{{ url_for('students.edit_student', student_id=student.id_number) }}" class="btn btn-success">Edit</a>
-                <form action="{{ url_for('students.delete_student', student_id=student.id_number) }}" method="POST" style="display:inline-block;" onsubmit="return confirmDelete()">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
+                <div class="btn-group">
+                    <a href="{{ url_for('students.edit_student', student_id=student.id_number) }}" class="btn-action btn-edit" title="Edit Student">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <form action="{{ url_for('students.delete_student', student_id=student.id_number) }}" method="POST" onsubmit="return confirmDelete()" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-action btn-delete" title="Delete Student">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </button>
+                    </form>
+                </div>
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 
+<!-- Pagination -->
 <ul class="pagination">
     {% if page > 1 %}
         <li class="page-item">
-            <a class="page-link" 
-               href="{{ url_for('students.search_student' if query else 'students.home', page=page-1, query=query if query else '') }}">
+            <a class="page-link" href="{{ url_for(base_url, page=page-1, query=query if query else None, sort_by=sort_by, sort_dir=sort_dir) }}">
                 &laquo; Previous
             </a>
         </li>
@@ -64,8 +145,7 @@
     
     {% for p in range(1, total_pages + 1) %}
         <li class="page-item {% if p == page %}active{% endif %}">
-            <a class="page-link" 
-               href="{{ url_for('students.search_student' if query else 'students.home', page=p, query=query if query else '') }}">
+            <a class="page-link" href="{{ url_for(base_url, page=p, query=query if query else None, sort_by=sort_by, sort_dir=sort_dir) }}">
                 {{ p }}
             </a>
         </li>
@@ -73,8 +153,7 @@
     
     {% if page < total_pages %}
         <li class="page-item">
-            <a class="page-link" 
-               href="{{ url_for('students.search_student' if query else 'students.home', page=page+1, query=query if query else '') }}">
+            <a class="page-link" href="{{ url_for(base_url, page=page+1, query=query if query else None, sort_by=sort_by, sort_dir=sort_dir) }}">
                 Next &raquo;
             </a>
         </li>
@@ -85,5 +164,6 @@
     function confirmDelete() {
         return confirm("Are you sure you want to delete this student?");
     }
-</script>    
+</script>
+
 {% endblock %}

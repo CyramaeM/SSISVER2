@@ -87,3 +87,83 @@
 .form-container button[type="submit"]:hover {
     background-color: #055a92;
 }
+.btn-action {
+    padding: 6px 12px;
+    margin: 2px;
+    border-radius: 4px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.btn-edit {
+    background-color: #28a745;
+    color: white;
+    border: none;
+}
+
+.btn-edit:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-action i {
+    margin-right: 5px;
+}
+
+.btn-group {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+    /* Enhanced Add Student button */
+    .btn-add {
+        background: linear-gradient(135deg, #cbdce4, #f9fafb);
+        color: rgb(12, 7, 7);
+        padding: 10px 15px;
+        border-radius: 50px;
+        font-size: 16px;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        border: none;
+        text-decoration: none;
+    }
+    
+    .btn-add i {
+        margin-right: 8px;
+        font-size: 18px;
+    }
+    
+    .searchable-table th a {
+        cursor: pointer;
+        color: #007bff;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+    .searchable-table th i {
+        margin-left: 5px;
+        color: #888;
+    }
+
+    .sorted-column {
+        background-color: #f0f8ff;
+        font-weight: bold;
+        border-bottom: 2px solid #007bff;
+    }
